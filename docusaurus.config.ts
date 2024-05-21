@@ -11,7 +11,7 @@ const config: Config = {
   baseUrl: "/langchainjs-kr",
   projectName: "langchainjs-kr",
   organizationName: "froggy1014",
-  deploymentBranch: "main",
+  deploymentBranch: "gh-pages",
   trailingSlash: false,
 
   onBrokenLinks: "throw",
