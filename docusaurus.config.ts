@@ -3,16 +3,16 @@ import type { Config } from '@docusaurus/types';
 import { themes as prismThemes } from 'prism-react-renderer';
 
 const config: Config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
-  favicon: 'img/favicon.ico',
+  title: "Langchainjs for Korean",
+  tagline: "by froggy1014",
+  favicon: "img/favicon.ico",
 
   // https://docusaurus.io/ko/docs/deployment#deploying-to-github-pages
-  url: 'https://froggy1014.github.io',
-  baseUrl: '/',
-  projectName: 'langchainjs-kr',
-  organizationName: 'froggy1014',
-  deploymentBranch: 'gh-pages',
+  url: "https://froggy1014.github.io",
+  baseUrl: "/langchainjs-kr",
+  projectName: "langchainjs-kr",
+  organizationName: "froggy1014",
+  deploymentBranch: "gh-pages",
   trailingSlash: false,
 
   onBrokenLinks: 'throw',
