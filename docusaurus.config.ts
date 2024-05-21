@@ -7,7 +7,6 @@ const config: Config = {
   tagline: "by froggy1014",
   favicon: "img/favicon.ico",
 
-  // https://docusaurus.io/ko/docs/deployment#deploying-to-github-pages
   url: "https://froggy1014.github.io",
   baseUrl: "/langchainjs-kr",
   projectName: "langchainjs-kr",
@@ -21,10 +20,10 @@ const config: Config = {
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
-  i18n: {
-    defaultLocale: "en",
-    locales: ["en"],
-  },
+  // i18n: {
+  //   defaultLocale: "en",
+  //   locales: ["en"],
+  // },
 
   presets: [
     [
@@ -34,15 +33,13 @@ const config: Config = {
           sidebarPath: "./sidebars.ts",
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+          editUrl: "https://github.com/froggy1014/langchainjs-kr",
         },
         blog: {
           showReadingTime: true,
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+          editUrl: "https://github.com/froggy1014/langchainjs-kr",
         },
         theme: {
           customCss: "./src/css/custom.css",
@@ -81,38 +78,8 @@ const config: Config = {
           title: "Docs",
           items: [
             {
-              label: "Tutorial",
-              to: "/docs/intro",
-            },
-          ],
-        },
-        {
-          title: "Community",
-          items: [
-            {
-              label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/docusaurus",
-            },
-            {
-              label: "Discord",
-              href: "https://discordapp.com/invite/docusaurus",
-            },
-            {
-              label: "Twitter",
-              href: "https://twitter.com/docusaurus",
-            },
-          ],
-        },
-        {
-          title: "More",
-          items: [
-            {
-              label: "Blog",
-              to: "/blog",
-            },
-            {
-              label: "GitHub",
-              href: "https://github.com/facebook/docusaurus",
+              label: "Docs",
+              to: "/docs/Introduction",
             },
           ],
         },
