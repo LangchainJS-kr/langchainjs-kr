@@ -1,8 +1,3 @@
----
-sidebar_position: 5
-sidebar_label: Security
----
-
 # Security
 
 LangChain has a large ecosystem of integrations with various external resources like local and remote file systems, APIs and databases. These integrations allow developers to create versatile applications that combine the power of LLMs with the ability to access, interact with and manipulate external resources.ov

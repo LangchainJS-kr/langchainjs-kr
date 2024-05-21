@@ -1,7 +1,3 @@
----
-sidebar_position: 4
----
-
 # Conceptual guide
 
 This section contains introductions to key parts of LangChain.
@@ -10,14 +6,14 @@ This section contains introductions to key parts of LangChain.
 
 LangChain as a framework consists of several pieces. The below diagram shows how they relate.
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
-import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import ThemedImage from "@theme/ThemedImage";
 
 <ThemedImage
   alt="Diagram outlining the hierarchical organization of the LangChain framework, displaying the interconnected parts across multiple layers."
   sources={{
-    light: useBaseUrl('/svg/langchain_stack.svg'),
-    dark: useBaseUrl('/svg/langchain_stack_dark.svg'),
+    light: useBaseUrl("/svg/langchain_stack.svg"),
+    dark: useBaseUrl("/svg/langchain_stack_dark.svg"),
   }}
   title="LangChain Framework Overview"
 />
@@ -269,13 +265,13 @@ These prompt templates are used to format a single string, and generally are use
 For example, a common way to construct and use a PromptTemplate is as follows:
 
 ```typescript
-import { PromptTemplate } from '@langchain/core/prompts';
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const promptTemplate = PromptTemplate.fromTemplate(
-  'Tell me a joke about {topic}'
+  "Tell me a joke about {topic}"
 );
 
-await promptTemplate.invoke({ topic: 'cats' });
+await promptTemplate.invoke({ topic: "cats" });
 ```
 
 #### ChatPromptTemplates
@@ -284,14 +280,14 @@ These prompt templates are used to format an array of messages. These "templates
 For example, a common way to construct and use a ChatPromptTemplate is as follows:
 
 ```typescript
-import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const promptTemplate = ChatPromptTemplate.fromMessages([
-  ['system', 'You are a helpful assistant'],
-  ['user', 'Tell me a joke about {topic}'],
+  ["system", "You are a helpful assistant"],
+  ["user", "Tell me a joke about {topic}"],
 ]);
 
-await promptTemplate.invoke({ topic: 'cats' });
+await promptTemplate.invoke({ topic: "cats" });
 ```
 
 In the above example, this ChatPromptTemplate will construct two messages when called.
@@ -309,15 +305,15 @@ This is how you use MessagesPlaceholder.
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
-} from '@langchain/core/prompts';
-import { HumanMessage } from '@langchain/core/messages';
+} from "@langchain/core/prompts";
+import { HumanMessage } from "@langchain/core/messages";
 
 const promptTemplate = ChatPromptTemplate.fromMessages([
-  ['system', 'You are a helpful assistant'],
-  new MessagesPlaceholder('msgs'),
+  ["system", "You are a helpful assistant"],
+  new MessagesPlaceholder("msgs"),
 ]);
 
-promptTemplate.invoke({ msgs: [new HumanMessage({ content: 'hi!' })] });
+promptTemplate.invoke({ msgs: [new HumanMessage({ content: "hi!" })] });
 ```
 
 This will produce an array of two messages, the first one being a system message, and the second one being the HumanMessage we passed in.
@@ -328,8 +324,8 @@ An alternative way to accomplish the same thing without using the `MessagesPlace
 
 ```typescript
 const promptTemplate = ChatPromptTemplate.fromMessages([
-  ['system', 'You are a helpful assistant'],
-  ['placeholder', '{msgs}'], // <-- This is the changed part
+  ["system", "You are a helpful assistant"],
+  ["placeholder", "{msgs}"], // <-- This is the changed part
 ]);
 ```
 
@@ -413,7 +409,7 @@ Each DocumentLoader has its own specific parameters, but they can all be invoked
 An example use case is as follows:
 
 ```typescript
-import { CSVLoader } from 'langchain/document_loaders/fs/csv';
+import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
 const loader = new CSVLoader();
 // <-- Integration specific parameters here
