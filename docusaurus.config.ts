@@ -7,8 +7,8 @@ const config: Config = {
   tagline: "by froggy1014",
   favicon: "img/favicon.ico",
 
-  url: "https://froggy1014.github.io",
-  baseUrl: "/langchainjs-kr",
+  url: "https://langchainjs-kr.site",
+  baseUrl: "/",
   projectName: "langchainjs-kr",
   organizationName: "froggy1014",
   deploymentBranch: "gh-pages",
