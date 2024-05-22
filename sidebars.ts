@@ -11,19 +11,19 @@ const sidebars: SidebarsConfig = {
     {
       type: "doc",
       id: "tutorials",
-      label: "tutorials",
+      label: "Tutorials",
       className: "tutorials",
     },
     {
       type: "doc",
       id: "how-to-guides",
-      label: "how-to-guides",
+      label: "How-to guides",
       className: "how-to-guides",
     },
     {
       type: "doc",
       id: "concepts",
-      label: "concepts",
+      label: "Conceptstual guide",
       className: "concepts",
     },
     {
@@ -73,7 +73,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "doc",
       id: "security",
-      label: "security",
+      label: "Security",
       className: "security",
     },
   ],
