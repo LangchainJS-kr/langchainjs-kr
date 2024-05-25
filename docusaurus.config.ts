@@ -27,19 +27,11 @@ const config: Config = {
 
   presets: [
     [
-      "classic",
+      "@docusaurus/preset-classic",
       {
         docs: {
           sidebarPath: "./sidebars.ts",
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/froggy1014/langchainjs-kr",
-        },
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/froggy1014/langchainjs-kr",
+          editUrl: "https://langchainjs-kr.site",
         },
         theme: {
           customCss: "./src/css/custom.css",
@@ -52,20 +44,19 @@ const config: Config = {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
     navbar: {
-      title: "My Site",
       logo: {
-        alt: "My Site Logo",
-        src: "img/logo.svg",
+        src: "img/brand/wordmark.png",
+        srcDark: "img/brand/wordmark-dark.png",
       },
       items: [
         {
           type: "docSidebar",
           sidebarId: "tutorialSidebar",
           position: "left",
-          label: "Tutorial",
+          label: "문서",
         },
         {
-          href: "https://github.com/facebook/docusaurus",
+          href: "https://github.com/froggy1014/langchainjs-kr",
           label: "GitHub",
           position: "right",
         },
@@ -79,7 +70,7 @@ const config: Config = {
           items: [
             {
               label: "Docs",
-              to: "/docs/Introduction",
+              to: "/docs/introduction",
             },
           ],
         },
