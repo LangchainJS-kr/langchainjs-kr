@@ -1,31 +1,29 @@
-# Security
+# 보안
 
-LangChain has a large ecosystem of integrations with various external resources like local and remote file systems, APIs and databases. These integrations allow developers to create versatile applications that combine the power of LLMs with the ability to access, interact with and manipulate external resources.ov
+LangChain은 로컬 및 원격 파일 시스템, API 및 데이터베이스와 같은 다양한 외부 리소스와의 통합을 포함하는 큰 생태계를 가지고 있습니다. 이러한 통합을 통해 개발자는 LLM의 강력한 기능과 외부 리소스에 접근, 상호작용 및 조작할 수 있는 기능을 결합한 다재다능한 애플리케이션을 만들 수 있습니다.
 
-## Best Practices
+## 모범 사례
 
-When building such applications developers should remember to follow good security practices:
+이러한 애플리케이션을 구축할 때 개발자는 올바른 보안 관행을 준수해야 합니다.
 
-- [**Limit Permissions**](https://en.wikipedia.org/wiki/Principle_of_least_privilege): Scope permissions specifically to the application's need. Granting broad or excessive permissions can introduce significant security vulnerabilities. To avoid such vulnerabilities, consider using read-only credentials, disallowing access to sensitive resources, using sandboxing techniques (such as running inside a container), etc. as appropriate for your application.
-- **Anticipate Potential Misuse**: Just as humans can err, so can Large Language Models (LLMs). Always assume that any system access or credentials may be used in any way allowed by the permissions they are assigned. For example, if a pair of database credentials allows deleting data, it’s safest to assume that any LLM able to use those credentials may in fact delete data.
-- [**Defense in Depth**](<https://en.wikipedia.org/wiki/Defense_in_depth_(computing)>): No security technique is perfect. Fine-tuning and good chain design can reduce, but not eliminate, the odds that a Large Language Model (LLM) may make a mistake. It’s best to combine multiple layered security approaches rather than relying on any single layer of defense to ensure security. For example: use both read-only permissions and sandboxing to ensure that LLMs are only able to access data that is explicitly meant for them to use.
+- [**최소 권한의 원칙**](https://ko.wikipedia.org/wiki/%EC%B5%9C%EC%86%8C_%EA%B6%8C%ED%95%9C%EC%9D%98_%EC%9B%90%EC%B9%99): 권한을 애플리케이션의 니즈에 맞게 구체적으로 설정하세요. 광범위하거나 과도한 권한을 부여하면 심각한 보안 취약점이 발생할 수 있습니다. 이러한 취약점을 피하기 위해 읽기 전용 자격 증명 도입하거나 민감한 리소스에 대한 접근을 차단하고, 애플리케이션에 적합한 샌드박싱 기술(예: 컨테이너 내부에서 실행)을 사용하는 것을 고려하세요.
+- **잠재적 오용 예상**: 인간이 실수를 할 수 있는 것처럼 거대 언어 모델(LLM)도 실수를 할 수 있습니다. 시스템 접근 권한이나 자격 증명이 부여된 권한 내에서 어떠한 방식으로든 사용될 수 있다는것을 인지해야 합니다. 예를 들어, 데이터 삭제를 허용하는 데이터베이스 자격 증명이 있다면, 해당 자격 증명을 사용할 수 있는 LLM이 실제로 데이터를 삭제할 수 있다고 가정하는 것이 가장 안전합니다.
+- [**심층 방어**](<https://ko.wikipedia.org/wiki/%EB%A0%88%EC%9D%B4%EC%96%B4%EB%93%9C_%EC%8B%9C%ED%81%90%EB%A6%AC%ED%8B%B0>): 완벽한 보안 기술은 없습니다. 파인튜닝 및 좋은 체인 설계를 통해 대형 언어 모델(LLM)이 실수할 확률을 줄일 수 있지만 완전히 제거할 수는 없습니다. 단일 방어층에 의존하기보다는 여러 계층의 보안 접근 방식을 결합하는 것이 가장 좋습니다. 예를 들어, 읽기 전용 권한과 샌드박싱을 모두 사용하여 LLM이 명시적으로 사용하도록 허가된 데이터만 접근할 수 있도록 하세요.
 
-Risks of not doing so include, but are not limited to:
+이를 하지 않는다면 아래와 같은 문제점이 있을 수 있고, 이 목록들이 전부는 아닙니다:
 
-- Data corruption or loss.
-- Unauthorized access to confidential information.
-- Compromised performance or availability of critical resources.
+- 데이터 손상 또는 손실.
+- 기밀 정보에 대한 무단 접근.
+- 중요한 리소스의 성능 또는 가용성 저하.
 
-Example scenarios with mitigation strategies:
+예방 전략을 포함한 예시 시나리오:
 
-- A user may ask an agent with access to the file system to delete files that should not be deleted or read the content of files that contain sensitive information. To mitigate, limit the agent to only use a specific directory and only allow it to read or write files that are safe to read or write. Consider further sandboxing the agent by running it in a container.
-- A user may ask an agent with write access to an external API to write malicious data to the API, or delete data from that API. To mitigate, give the agent read-only API keys, or limit it to only use endpoints that are already resistant to such misuse.
-- A user may ask an agent with access to a database to drop a table or mutate the schema. To mitigate, scope the credentials to only the tables that the agent needs to access and consider issuing READ-ONLY credentials.
+- 사용자가 파일 시스템에 접근할 수 있는 에이전트에게 삭제해서는 안 되는 파일을 삭제하거나 민감한 정보를 포함하는 파일의 내용을 읽도록 요청할 수 있습니다. 이를 예방하기 위해 에이전트가 특정 디렉토리만 사용하도록 제한하고, 안전한 파일만 읽거나 쓰도록 허용하세요. 추가적으로 에이전트를 컨테이너에서 실행하여 샌드박싱하는 것을 고려하세요.
+- 사용자가 외부 API에 쓰기 권한이 있는 에이전트에게 악의적인 데이터를 API에 쓰거나 API에서 데이터를 삭제하도록 요청할 수 있습니다. 이를 예방하기 위해 에이전트에게 읽기 전용 API 키를 부여하거나 이러한 오용에 이미 대응된 엔드포인트만 사용하도록 제한하세요.
+- 사용자가 데이터베이스에 접근할 수 있는 에이전트에게 테이블을 삭제하거나 스키마를 변경하도록 요청할 수 있습니다. 이를 예방하기 위해 자격 증명을 에이전트가 접근해야 하는 테이블로만 제한하고 읽기 전용 자격 증명을 발급하는 것을 고려하세요.
 
-If you're building applications that access external resources like file systems, APIs
-or databases, consider speaking with your company's security team to determine how to best
-design and secure your applications.
+파일 시스템, API 또는 데이터베이스와 같은 외부 리소스에 접근하는 애플리케이션을 구축하는 경우, 보안 팀과 상의하여 애플리케이션을 가장 잘 설계하고 보호하는 방법을 결정하는 것이 좋습니다.
 
-## Reporting a Vulnerability
+## 취약점 보고
 
-Please report security vulnerabilities by email to security@langchain.dev. This will ensure the issue is promptly triaged and acted upon as needed.
+보안 취약점은 security@langchain.dev로 이메일을 통해 보고해 주세요. 그러면 최대한 문제를 신속하게 분류하고 필요한 조치를 취하도록 하겠습니다.
