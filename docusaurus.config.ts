@@ -3,7 +3,7 @@ import type { Config } from "@docusaurus/types";
 import { themes as prismThemes } from "prism-react-renderer";
 
 const config: Config = {
-  title: "Langchainjs for Korean",
+  title: "🦜🔗 랭체인 자바스크립트",
   tagline: "by froggy1014",
   favicon: "img/favicon.ico",
 
@@ -42,7 +42,7 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: "img/docusaurus-social-card.jpg",
+    image: "https://js.langchain.com/v0.2/img/brand/theme-image.png",
     navbar: {
       logo: {
         src: "img/brand/wordmark.png",
