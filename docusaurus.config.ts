@@ -1,6 +1,11 @@
 import type * as Preset from "@docusaurus/preset-classic";
 import type { Config } from "@docusaurus/types";
 import { themes as prismThemes } from "prism-react-renderer";
+import {ProvidePlugin} from 'webpack'
+import path from "path"
+
+const examplesPath = path.resolve(__dirname, "..", "..", "examples", "src");
+const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
 
 const config: Config = {
   title: "🦜🔗 랭체인 자바스크립트",
@@ -88,6 +93,45 @@ const config: Config = {
       },
     },
   } satisfies Preset.ThemeConfig,
+  plugins: [
+    () => ({
+      name: "custom-webpack-config",
+      configureWebpack: () => ({
+        plugins: [
+          new ProvidePlugin({
+            process: require.resolve("process/browser"),
+          }),
+        ],
+        resolve: {
+          fallback: {
+            path: false,
+            url: false,
+          },
+          alias: {
+            "@mdx_components": mdxComponentsPath,
+          },
+        },
+        module: {
+          rules: [
+            {
+              test: examplesPath,
+              use: ["json-loader", "./scripts/code-block-loader.js"],
+            },
+            {
+              test: /\.ya?ml$/,
+              use: "yaml-loader",
+            },
+            {
+              test: /\.m?js/,
+              resolve: {
+                fullySpecified: false,
+              },
+            },
+          ],
+        },
+      }),
+    }),
+  ],
 };
 
 export default config;

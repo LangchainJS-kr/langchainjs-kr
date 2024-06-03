@@ -20,11 +20,11 @@
     "@supabase/supabase-js": "^2.43.4",
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.3.1",
+    "process": "^0.11.10",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.3.2",
     "@docusaurus/preset-classic": "^3.3.2",
     "@docusaurus/tsconfig": "3.3.2",
     "@docusaurus/types": "3.3.2",
@@ -36,7 +36,8 @@
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.34.2",
     "eslint-plugin-react-hooks": "^4.6.2",
-    "typescript": "~5.2.2"
+    "typescript": "~5.2.2",
+    "webpack": "^5.91.0"
   },
   "browserslist": {
     "production": [
