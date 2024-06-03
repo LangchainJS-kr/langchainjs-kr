@@ -1,6 +1,88 @@
 ---
-title: How to create custom Tools
 sidebar_class_name: hidden
-pagination_prev: null
-pagination_next: null
+
+title: How to create custom Tools
 ---
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [LangChain tools](../../docs/concepts#tools)
+- [Agents](../../docs/concepts/#agents)
+
+:::
+
+When constructing your own agent, you will need to provide it with a
+list of Tools that it can use. While LangChain includes some prebuilt
+tools, it can often be more useful to use tools that use custom logic.
+This guide will walk you through how to use these `Dynamic` tools.
+
+In this guide, we will walk through how to do define a tool for two
+functions:
+
+1.  A multiplier function that will multiply two numbers by each other
+2.  A made up search function that always returns the string “LangChain”
+
+The biggest difference here is that the first function requires an
+object with multiple input fields, while the second one only accepts an
+object with a single field. Some older agents only work with functions
+that require single inputs, so it’s important to understand the
+distinction.
+
+## `DynamicStructuredTool`
+
+Newer and more advanced agents can handle more flexible tools that take
+multiple inputs. You can use the
+[`DynamicStructuredTool`](https://v02.api.js.langchain.com/classes/langchain_core_tools.DynamicStructuredTool.html)
+class to declare them. Here’s an example - note that tools must always
+return strings!
+
+```typescript
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+
+const multiplyTool = new DynamicStructuredTool({
+  name: "multiply",
+  description: "multiply two numbers together",
+  schema: z.object({
+    a: z.number().describe("the first number to multiply"),
+    b: z.number().describe("the second number to multiply"),
+  }),
+  func: async ({ a, b }: { a: number; b: number }) => {
+    return (a * b).toString();
+  },
+});
+
+await multiplyTool.invoke({ a: 8, b: 9 });
+```
+
+```text
+"72"
+```
+
+## `DynamicTool`
+
+For older agents that require tools which accept only a single input,
+you can pass the relevant parameters to the
+[`DynamicTool`](https://v02.api.js.langchain.com/classes/langchain_core_tools.DynamicTool.html)
+class. This is useful when working with older agents that only support
+tools that accept a single input. In this case, no schema is required:
+
+```typescript
+import { DynamicTool } from "@langchain/core/tools";
+
+const searchTool = new DynamicTool({
+  name: "search",
+  description: "look things up online",
+  func: async (_input: string) => {
+    return "LangChain";
+  },
+});
+
+await searchTool.invoke("foo");
+```
+
+```text
+"LangChain"
+```

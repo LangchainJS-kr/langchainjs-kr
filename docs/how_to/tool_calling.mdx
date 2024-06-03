@@ -1,6 +1,436 @@
 ---
-title: How to use a chat model to call tools
 sidebar_class_name: hidden
-pagination_prev: null
-pagination_next: null
+
+title: How to use a chat model to call tools
 ---
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Chat models](../../docs/concepts/#chat-models)
+- [LangChain Tools](../../docs/concepts/#tools)
+
+:::
+
+```mdx-code-block
+:::info
+We use the term tool calling interchangeably with function calling. Although
+function calling is sometimes meant to refer to invocations of a single function,
+we treat all models as though they can return multiple tool or function calls in
+each message.
+:::
+```
+
+Tool calling allows a chat model to respond to a given prompt by
+“calling a tool”. While the name implies that the model is performing
+some action, this is actually not the case! The model generates the
+arguments to a tool, and actually running the tool (or not) is up to the
+user. For example, if you want to [extract output matching some
+schema](../../docs/how_to/structured_output/) from unstructured text,
+you could give the model an “extraction” tool that takes parameters
+matching the desired schema, then treat the generated output as your
+final result.
+
+However, tool calling goes beyond [structured
+output](../../docs/how_to/structured_output/) since you can pass
+responses to caled tools back to the model to create longer
+interactions. For instance, given a search engine tool, an LLM might
+handle a query by first issuing a call to the search engine with
+arguments. The system calling the LLM can receive the tool call, execute
+it, and return the output to the LLM to inform its response. LangChain
+includes a suite of [built-in tools](../../docs/integrations/tools/) and
+supports several methods for defining your own [custom
+tools](../../docs/how_to/custom_tools).
+
+Tool calling is not universal, but many popular LLM providers, including
+[Anthropic](https://www.anthropic.com/), [Cohere](https://cohere.com/),
+[Google](https://cloud.google.com/vertex-ai),
+[Mistral](https://mistral.ai/), [OpenAI](https://openai.com/), and
+others, support variants of a tool calling feature.
+
+LangChain implements standard interfaces for defining tools, passing
+them to LLMs, and representing tool calls. This guide will show you how
+to use them.
+
+## Passing tools to LLMs
+
+Chat models that support tool calling features implement a
+[`.bindTools()`](https://v02.api.js.langchain.com/classes/langchain_core_language_models_chat_models.BaseChatModel.html#bindTools)
+method, which receives a list of LangChain [tool
+objects](https://v02.api.js.langchain.com/classes/langchain_core_tools.StructuredTool.html)
+and binds them to the chat model in its expected format. Subsequent
+invocations of the chat model will include tool schemas in its calls to
+the LLM.
+
+Let’s walk through a few examples:
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs customVarName="llm" providers={["anthropic", "openai", "mistral", "fireworks"]} additionalDependencies="@langchain/core" />
+```
+
+A number of models implement helper methods that will take care of
+formatting and binding different function-like objects to the model.
+Let’s take a look at how we might take the following Zod function schema
+and get different models to invoke it:
+
+```typescript
+import { z } from "zod";
+
+/**
+ * Note that the descriptions here are crucial, as they will be passed along
+ * to the model along with the class name.
+ */
+const calculatorSchema = z.object({
+  operation: z
+    .enum(["add", "subtract", "multiply", "divide"])
+    .describe("The type of operation to execute."),
+  number1: z.number().describe("The first number to operate on."),
+  number2: z.number().describe("The second number to operate on."),
+});
+```
+
+We can use the `.bindTools()` method to handle the conversion from
+LangChain tool to our model provider’s specific format and bind it to
+the model (i.e., passing it in each time the model is invoked). Let’s
+create a `DynamicStructuredTool` implementing a tool based on the above
+schema, then bind it to the model:
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+
+const calculatorTool = new DynamicStructuredTool({
+  name: "calculator",
+  description: "Can perform mathematical operations.",
+  schema: calculatorSchema,
+  func: async ({ operation, number1, number2 }) => {
+    // Functions must return strings
+    if (operation === "add") {
+      return `${number1 + number2}`;
+    } else if (operation === "subtract") {
+      return `${number1 - number2}`;
+    } else if (operation === "multiply") {
+      return `${number1 * number2}`;
+    } else if (operation === "divide") {
+      return `${number1 / number2}`;
+    } else {
+      throw new Error("Invalid operation.");
+    }
+  },
+});
+
+const llmWithTools = llm.bindTools([calculatorTool]);
+```
+
+Now, let’s invoke it! We expect the model to use the calculator to
+answer the question:
+
+```typescript
+const res = await llmWithTools.invoke("What is 3 * 12");
+
+console.log(res.tool_calls);
+```
+
+```text
+[
+  {
+    name: "calculator",
+    args: { operation: "multiply", number1: 3, number2: 12 },
+    id: "call_Ri9s27J17B224FEHrFGkLdxH"
+  }
+]
+```
+
+```mdx-code-block
+:::tip
+See a LangSmith trace for the above [here](https://smith.langchain.com/public/14e4b50c-c6cf-4c53-b3ef-da550edb6d66/r).
+:::
+```
+
+We can see that the response message contains a `tool_calls` field when
+the model decides to call the tool. This will be in LangChain’s
+standardized format.
+
+The `.tool_calls` attribute should contain valid tool calls. Note that
+on occasion, model providers may output malformed tool calls (e.g.,
+arguments that are not valid JSON). When parsing fails in these cases,
+the message will contain instances of of
+[InvalidToolCall](https://v02.api.js.langchain.com/types/langchain_core_messages_tool.InvalidToolCall.html)
+objects in the `.invalid_tool_calls` attribute. An `InvalidToolCall` can
+have a name, string arguments, identifier, and error message.
+
+### Streaming
+
+When tools are called in a streaming context, [message
+chunks](https://v02.api.js.langchain.com/classes/langchain_core_messages.BaseMessageChunk.html)
+will be populated with [tool call
+chunk](https://v02.api.js.langchain.com/types/langchain_core_messages_tool.ToolCallChunk.html)
+objects in a list via the `.tool_call_chunks` attribute. A
+`ToolCallChunk` includes optional string fields for the tool `name`,
+`args`, and `id`, and includes an optional integer field `index` that
+can be used to join chunks together. Fields are optional because
+portions of a tool call may be streamed across different chunks (e.g., a
+chunk that includes a substring of the arguments may have null values
+for the tool name and id).
+
+Because message chunks inherit from their parent message class, an
+[AIMessageChunk](https://v02.api.js.langchain.com/classes/langchain_core_messages.AIMessageChunk.html)
+with tool call chunks will also include `.tool_calls` and
+`.invalid_tool_calls` fields. These fields are parsed best-effort from
+the message’s tool call chunks.
+
+Note that not all providers currently support streaming for tool calls.
+If this is the case for your specific provider, the model will yield a
+single chunk with the entire call when you call `.stream()`.
+
+```typescript
+const stream = await llmWithTools.stream("What is 308 / 29");
+
+for await (const chunk of stream) {
+  console.log(chunk.tool_call_chunks);
+}
+```
+
+```text
+[
+  {
+    name: "calculator",
+    args: "",
+    id: "call_rGqPR1ivppYUeBb0iSAF8HGP",
+    index: 0
+  }
+]
+[ { name: undefined, args: '{"', id: undefined, index: 0 } ]
+[ { name: undefined, args: "operation", id: undefined, index: 0 } ]
+[ { name: undefined, args: '":"', id: undefined, index: 0 } ]
+[ { name: undefined, args: "divide", id: undefined, index: 0 } ]
+[ { name: undefined, args: '","', id: undefined, index: 0 } ]
+[ { name: undefined, args: "number", id: undefined, index: 0 } ]
+[ { name: undefined, args: "1", id: undefined, index: 0 } ]
+[ { name: undefined, args: '":', id: undefined, index: 0 } ]
+[ { name: undefined, args: "308", id: undefined, index: 0 } ]
+[ { name: undefined, args: ',"', id: undefined, index: 0 } ]
+[ { name: undefined, args: "number", id: undefined, index: 0 } ]
+[ { name: undefined, args: "2", id: undefined, index: 0 } ]
+[ { name: undefined, args: '":', id: undefined, index: 0 } ]
+[ { name: undefined, args: "29", id: undefined, index: 0 } ]
+[ { name: undefined, args: "}", id: undefined, index: 0 } ]
+[]
+```
+
+Note that using the `concat` method on message chunks will merge their
+corresponding tool call chunks. This is the principle by which
+LangChain’s various [tool output
+parsers](../../docs/how_to/output_parser_structured/) support streaming.
+
+For example, below we accumulate tool call chunks:
+
+```typescript
+const streamWithAccumulation = await llmWithTools.stream(
+  "What is 32993 - 2339"
+);
+
+let final;
+for await (const chunk of streamWithAccumulation) {
+  if (!final) {
+    final = chunk;
+  } else {
+    final = final.concat(chunk);
+  }
+}
+
+console.log(final.tool_calls);
+```
+
+```text
+[
+  {
+    name: "calculator",
+    args: { operation: "subtract", number1: 32993, number2: 2339 },
+    id: "call_WMhL5X0fMBBZPNeyUZY53Xuw"
+  }
+]
+```
+
+## Few shotting with tools
+
+You can give the model examples of how you would like tools to be called
+in order to guide generation by inputting manufactured tool call turns.
+For example, given the above calculator tool, we could define a new
+operator, `🦜`. Let’s see what happens when we use it naively:
+
+```typescript
+const res = await llmWithTools.invoke("What is 3 🦜 12");
+
+console.log(res.content);
+console.log(res.tool_calls);
+```
+
+```text
+It seems like you've used an emoji (🦜) in your expression, which I'm not familiar with in a mathematical context. Could you clarify what operation you meant by using the parrot emoji? For example, did you mean addition, subtraction, multiplication, or division?
+[]
+```
+
+It doesn’t quite know how to interpret `🦜` as an operation. Now, let’s
+try giving it an example in the form of a manufactured messages to steer
+it towards `divide`:
+
+```typescript
+import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+
+const res = await llmWithTools.invoke([
+  new HumanMessage("What is 333382 🦜 1932?"),
+  new AIMessage({
+    content: "",
+    tool_calls: [
+      {
+        id: "12345",
+        name: "calulator",
+        args: {
+          number1: 333382,
+          number2: 1932,
+          operation: "divide",
+        },
+      },
+    ],
+  }),
+  new ToolMessage({
+    tool_call_id: "12345",
+    content: "The answer is 172.558.",
+  }),
+  new AIMessage("The answer is 172.558."),
+  new HumanMessage("What is 3 🦜 12"),
+]);
+console.log(res.tool_calls);
+```
+
+```text
+[
+  {
+    name: "calculator",
+    args: { operation: "divide", number1: 3, number2: 12 },
+    id: "call_BDuJv8QkDZ7N7Wsd6v5VDeVa"
+  }
+]
+```
+
+## Binding model-specific formats (advanced)
+
+Providers adopt different conventions for formatting tool schemas. For
+instance, OpenAI uses a format like this:
+
+- `type`: The type of the tool. At the time of writing, this is always
+  “function”.
+- `function`: An object containing tool parameters.
+- `function.name`: The name of the schema to output.
+- `function.description`: A high level description of the schema to
+  output.
+- `function.parameters`: The nested details of the schema you want to
+  extract, formatted as a [JSON schema](https://json-schema.org/)
+  object.
+
+We can bind this model-specific format directly to the model if needed.
+Here’s an example:
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+
+const model = new ChatOpenAI({ model: "gpt-4o" });
+
+const modelWithTools = model.bind({
+  tools: [
+    {
+      type: "function",
+      function: {
+        name: "calculator",
+        description: "Can perform mathematical operations.",
+        parameters: {
+          type: "object",
+          properties: {
+            operation: {
+              type: "string",
+              description: "The type of operation to execute.",
+              enum: ["add", "subtract", "multiply", "divide"],
+            },
+            number1: { type: "number", description: "First integer" },
+            number2: { type: "number", description: "Second integer" },
+          },
+          required: ["number1", "number2"],
+        },
+      },
+    },
+  ],
+});
+
+await modelWithTools.invoke(`Whats 119 times 8?`);
+```
+
+```text
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: {
+    content: "",
+    tool_calls: [
+      {
+        name: "calculator",
+        args: { operation: "multiply", number1: 119, number2: 8 },
+        id: "call_pBlKOPNMRN4AAMkPaOKLLcyj"
+      }
+    ],
+    invalid_tool_calls: [],
+    additional_kwargs: {
+      function_call: undefined,
+      tool_calls: [
+        {
+          id: "call_pBlKOPNMRN4AAMkPaOKLLcyj",
+          type: "function",
+          function: [Object]
+        }
+      ]
+    },
+    response_metadata: {}
+  },
+  lc_namespace: [ "langchain_core", "messages" ],
+  content: "",
+  name: undefined,
+  additional_kwargs: {
+    function_call: undefined,
+    tool_calls: [
+      {
+        id: "call_pBlKOPNMRN4AAMkPaOKLLcyj",
+        type: "function",
+        function: {
+          name: "calculator",
+          arguments: '{"operation":"multiply","number1":119,"number2":8}'
+        }
+      }
+    ]
+  },
+  response_metadata: {
+    tokenUsage: { completionTokens: 24, promptTokens: 85, totalTokens: 109 },
+    finish_reason: "tool_calls"
+  },
+  tool_calls: [
+    {
+      name: "calculator",
+      args: { operation: "multiply", number1: 119, number2: 8 },
+      id: "call_pBlKOPNMRN4AAMkPaOKLLcyj"
+    }
+  ],
+  invalid_tool_calls: []
+}
+```
+
+This is functionally equivalent to the `bind_tools()` calls above.
+
+## Next steps
+
+Now you’ve learned how to bind tool schemas to a chat model and to call
+those tools. Next, check out some more specific uses of tool calling:
+
+- [Building tool-using chains and agents](../../docs/how_to/#tools)
+- [Getting structured outputs from
+  models](../../docs/how_to/structured_output/)

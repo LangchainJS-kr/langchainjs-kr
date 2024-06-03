@@ -1,6 +1,394 @@
 ---
-title: How to use tools
 sidebar_class_name: hidden
-pagination_prev: null
-pagination_next: null
+
+title: How to use tools
 ---
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following:
+
+- [Chatbots](../../docs/tutorials/chatbot)
+- [Tools](../../docs/concepts#tools)
+
+:::
+
+This section will cover how to create conversational agents: chatbots
+that can interact with other systems and APIs using tools.
+
+## Setup
+
+For this guide, we’ll be using an OpenAI tools agent with a single tool
+for searching the web. The default will be powered by
+[Tavily](../../docs/integrations/tools/tavily_search), but you can
+switch it out for any similar tool. The rest of this section will assume
+you’re using Tavily.
+
+You’ll need to [sign up for an account on the Tavily
+website](https://tavily.com), and install the following packages:
+
+```mdx-code-block
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<Npm2Yarn>
+  @langchain/core @langchain/openai langchain
+</Npm2Yarn>
+```
+
+```typescript
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { ChatOpenAI } from "@langchain/openai";
+
+const tools = [
+  new TavilySearchResults({
+    maxResults: 1,
+  }),
+];
+
+const llm = new ChatOpenAI({
+  model: "gpt-3.5-turbo-1106",
+  temperature: 0,
+});
+```
+
+To make our agent conversational, we must also choose a prompt with a
+placeholder for our chat history. Here’s an example:
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+// Adapted from https://smith.langchain.com/hub/hwchase17/openai-tools-agent
+const prompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "You are a helpful assistant. You may not need to use tools for every query - the user may just want to chat!",
+  ],
+  ["placeholder", "{messages}"],
+  ["placeholder", "{agent_scratchpad}"],
+]);
+```
+
+Great! Now let’s assemble our agent:
+
+```typescript
+import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+
+const agent = await createOpenAIToolsAgent({
+  llm,
+  tools,
+  prompt,
+});
+
+const agentExecutor = new AgentExecutor({ agent, tools });
+```
+
+## Running the agent
+
+Now that we’ve set up our agent, let’s try interacting with it! It can
+handle both trivial queries that require no lookup:
+
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
+
+await agentExecutor.invoke({
+  messages: [new HumanMessage("I'm Nemo!")],
+});
+```
+
+```text
+{
+  messages: [
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "I'm Nemo!",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "I'm Nemo!",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    }
+  ],
+  output: "Hello Nemo! It's great to meet you. How can I assist you today?"
+}
+```
+
+Or, it can use of the passed search tool to get up to date information
+if needed:
+
+```typescript
+await agentExecutor.invoke({
+  messages: [
+    new HumanMessage(
+      "What is the current conservation status of the Great Barrier Reef?"
+    ),
+  ],
+});
+```
+
+```text
+{
+  messages: [
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "What is the current conservation status of the Great Barrier Reef?",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "What is the current conservation status of the Great Barrier Reef?",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    }
+  ],
+  output: "The current conservation status of the Great Barrier Reef is a cause for concern. The International "... 801 more characters
+}
+```
+
+## Conversational responses
+
+Because our prompt contains a placeholder for chat history messages, our
+agent can also take previous interactions into account and respond
+conversationally like a standard chatbot:
+
+```typescript
+import { AIMessage } from "@langchain/core/messages";
+
+await agentExecutor.invoke({
+  messages: [
+    new HumanMessage("I'm Nemo!"),
+    new AIMessage("Hello Nemo! How can I assist you today?"),
+    new HumanMessage("What is my name?"),
+  ],
+});
+```
+
+```text
+{
+  messages: [
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "I'm Nemo!",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "I'm Nemo!",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    },
+    AIMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "Hello Nemo! How can I assist you today?",
+        tool_calls: [],
+        invalid_tool_calls: [],
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "Hello Nemo! How can I assist you today?",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {},
+      tool_calls: [],
+      invalid_tool_calls: []
+    },
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "What is my name?",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "What is my name?",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    }
+  ],
+  output: "Your name is Nemo!"
+}
+```
+
+If preferred, you can also wrap the agent executor in a
+`RunnableWithMessageHistory` class to internally manage history
+messages. First, we need to slightly modify the prompt to take a
+separate input variable so that the wrapper can parse which input value
+to store as history:
+
+```typescript
+// Adapted from https://smith.langchain.com/hub/hwchase17/openai-tools-agent
+const prompt2 = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "You are a helpful assistant. You may not need to use tools for every query - the user may just want to chat!",
+  ],
+  ["placeholder", "{chat_history}"],
+  ["human", "{input}"],
+  ["placeholder", "{agent_scratchpad}"],
+]);
+
+const agent2 = await createOpenAIToolsAgent({
+  llm,
+  tools,
+  prompt: prompt2,
+});
+
+const agentExecutor2 = new AgentExecutor({ agent: agent2, tools });
+```
+
+Then, because our agent executor has multiple outputs, we also have to
+set the `outputMessagesKey` property when initializing the wrapper:
+
+```typescript
+import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+import { RunnableWithMessageHistory } from "@langchain/core/runnables";
+
+const demoEphemeralChatMessageHistory = new ChatMessageHistory();
+
+const conversationalAgentExecutor = new RunnableWithMessageHistory({
+  runnable: agentExecutor2,
+  getMessageHistory: (_sessionId) => demoEphemeralChatMessageHistory,
+  inputMessagesKey: "input",
+  outputMessagesKey: "output",
+  historyMessagesKey: "chat_history",
+});
+```
+
+```typescript
+await conversationalAgentExecutor.invoke(
+  { input: "I'm Nemo!" },
+  { configurable: { sessionId: "unused" } }
+);
+```
+
+```text
+{
+  input: "I'm Nemo!",
+  chat_history: [
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "I'm Nemo!",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "I'm Nemo!",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    },
+    AIMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "Hello Nemo! It's great to meet you. How can I assist you today?",
+        tool_calls: [],
+        invalid_tool_calls: [],
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "Hello Nemo! It's great to meet you. How can I assist you today?",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {},
+      tool_calls: [],
+      invalid_tool_calls: []
+    }
+  ],
+  output: "Hello Nemo! It's great to meet you. How can I assist you today?"
+}
+```
+
+```typescript
+await conversationalAgentExecutor.invoke(
+  { input: "What is my name?" },
+  { configurable: { sessionId: "unused" } }
+);
+```
+
+```text
+{
+  input: "What is my name?",
+  chat_history: [
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "I'm Nemo!",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "I'm Nemo!",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    },
+    AIMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "Hello Nemo! It's great to meet you. How can I assist you today?",
+        tool_calls: [],
+        invalid_tool_calls: [],
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "Hello Nemo! It's great to meet you. How can I assist you today?",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {},
+      tool_calls: [],
+      invalid_tool_calls: []
+    },
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "What is my name?",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "What is my name?",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    },
+    AIMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "Your name is Nemo!",
+        tool_calls: [],
+        invalid_tool_calls: [],
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "Your name is Nemo!",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {},
+      tool_calls: [],
+      invalid_tool_calls: []
+    }
+  ],
+  output: "Your name is Nemo!"
+}
+```
+
+## Next steps
+
+You’ve now learned how to create chatbots with tool-use capabilities.
+
+For more, check out the other guides in this section, including [how to
+add history to your chatbots](../../docs/how_to/chatbots_memory).

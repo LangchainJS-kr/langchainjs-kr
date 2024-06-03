@@ -1,7 +1,308 @@
 ---
+sidebar_class_name: hidden
+
 sidebar_position: 3
 title: How to add ad-hoc tool calling capability to LLMs and Chat Models
-sidebar_class_name: hidden
-pagination_prev: null
-pagination_next: null
 ---
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [LangChain Expression Language
+  (LCEL)](../../docs/concepts/#langchain-expression-language)
+- [Chaining runnables](../../docs/how_to/sequence/)
+- [Tool calling](../../docs/how_to/tool_calling/)
+
+:::
+
+In this guide we’ll build a Chain that does not rely on any special
+model APIs (like tool calling, which we showed in the
+[Quickstart](../../docs/how_to/tool_calling)) and instead just prompts
+the model directly to invoke tools.
+
+## Setup
+
+We’ll need to install the following packages:
+
+```mdx-code-block
+import Npm2Yarn from '@theme/Npm2Yarn';
+
+<Npm2Yarn>
+  @langchain/core zod
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+```text
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+## Create a tool
+
+First, we need to create a tool to call. For this example, we will
+create a custom tool from a function. For more information on all
+details related to creating custom tools, please see [this
+guide](../../docs/how_to/custom_tools).
+
+```typescript
+import { StructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+
+class Multiply extends StructuredTool {
+  schema = z.object({
+    first_int: z.number(),
+    second_int: z.number(),
+  });
+
+  name = "multiply";
+
+  description = "Multiply two integers together.";
+
+  async _call(input: z.infer<typeof this.schema>) {
+    return (input.first_int * input.second_int).toString();
+  }
+}
+
+const multiply = new Multiply();
+```
+
+```typescript
+console.log(multiply.name);
+console.log(multiply.description);
+```
+
+```text
+multiply
+Multiply two integers together.
+```
+
+```typescript
+await multiply.invoke({ first_int: 4, second_int: 5 });
+```
+
+```text
+20
+```
+
+## Creating our prompt
+
+We’ll want to write a prompt that specifies the tools the model has
+access to, the arguments to those tools, and the desired output format
+of the model. In this case we’ll instruct it to output a JSON blob of
+the form `{"name": "...", "arguments": {...}}`.
+
+```typescript
+import { renderTextDescription } from "langchain/tools/render";
+
+const renderedTools = renderTextDescription([multiply]);
+```
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const systemPrompt = `You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
+
+{rendered_tools}
+
+Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys.`;
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", systemPrompt],
+  ["user", "{input}"],
+]);
+```
+
+## Adding an output parser
+
+We’ll use the `JsonOutputParser` for parsing our models output to JSON.
+
+```mdx-code-block
+import ChatModelTabs from '@theme/ChatModelTabs';
+
+<ChatModelTabs />
+```
+
+```typescript
+import { JsonOutputParser } from "@langchain/core/output_parsers";
+const chain = prompt.pipe(model).pipe(new JsonOutputParser());
+await chain.invoke({
+  input: "what's thirteen times 4",
+  rendered_tools: renderedTools,
+});
+```
+
+```text
+{ name: 'multiply', arguments: [ 13, 4 ] }
+```
+
+## Invoking the tool
+
+We can invoke the tool as part of the chain by passing along the
+model-generated “arguments” to it:
+
+```typescript
+import { RunnableLambda, RunnablePick } from "@langchain/core/runnables";
+
+const chain = prompt
+  .pipe(model)
+  .pipe(new JsonOutputParser())
+  .pipe(new RunnablePick("arguments"))
+  .pipe(
+    new RunnableLambda({
+      func: (input) =>
+        multiply.invoke({
+          first_int: input[0],
+          second_int: input[1],
+        }),
+    })
+  );
+await chain.invoke({
+  input: "what's thirteen times 4",
+  rendered_tools: renderedTools,
+});
+```
+
+```text
+52
+```
+
+## Choosing from multiple tools
+
+Suppose we have multiple tools we want the chain to be able to choose
+from:
+
+```typescript
+class Add extends StructuredTool {
+  schema = z.object({
+    first_int: z.number(),
+    second_int: z.number(),
+  });
+
+  name = "add";
+
+  description = "Add two integers together.";
+
+  async _call(input: z.infer<typeof this.schema>) {
+    return (input.first_int + input.second_int).toString();
+  }
+}
+const add = new Add();
+
+class Exponentiate extends StructuredTool {
+  schema = z.object({
+    first_int: z.number(),
+    second_int: z.number(),
+  });
+
+  name = "exponentiate";
+
+  description = "Exponentiate the base to the exponent power.";
+
+  async _call(input: z.infer<typeof this.schema>) {
+    return Math.pow(input.first_int, input.second_int).toString();
+  }
+}
+const exponentiate = new Exponentiate();
+```
+
+With function calling, we can do this like so:
+
+If we want to run the model selected tool, we can do so using a function
+that returns the tool based on the model output. Specifically, our
+function will action return it’s own subchain that gets the “arguments”
+part of the model output and passes it to the chosen tool:
+
+```typescript
+import { StructuredToolInterface } from "@langchain/core/tools";
+
+const tools = [add, exponentiate, multiply];
+
+const toolChain = (modelOutput) => {
+  const toolMap: Record<string, StructuredToolInterface> = Object.fromEntries(
+    tools.map((tool) => [tool.name, tool])
+  );
+  const chosenTool = toolMap[modelOutput.name];
+  return new RunnablePick("arguments").pipe(
+    new RunnableLambda({
+      func: (input) =>
+        chosenTool.invoke({
+          first_int: input[0],
+          second_int: input[1],
+        }),
+    })
+  );
+};
+const toolChainRunnable = new RunnableLambda({
+  func: toolChain,
+});
+
+const renderedTools = renderTextDescription(tools);
+const systemPrompt = `You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
+
+{rendered_tools}
+
+Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys.`;
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", systemPrompt],
+  ["user", "{input}"],
+]);
+const chain = prompt
+  .pipe(model)
+  .pipe(new JsonOutputParser())
+  .pipe(toolChainRunnable);
+await chain.invoke({
+  input: "what's 3 plus 1132",
+  rendered_tools: renderedTools,
+});
+```
+
+```text
+1135
+```
+
+## Returning tool inputs
+
+It can be helpful to return not only tool outputs but also tool inputs.
+We can easily do this with LCEL by `RunnablePassthrough.assign`-ing the
+tool output. This will take whatever the input is to the
+RunnablePassrthrough components (assumed to be a dictionary) and add a
+key to it while still passing through everything that’s currently in the
+input:
+
+```typescript
+import { RunnablePassthrough } from "@langchain/core/runnables";
+
+const chain = prompt
+  .pipe(model)
+  .pipe(new JsonOutputParser())
+  .pipe(RunnablePassthrough.assign({ output: toolChainRunnable }));
+await chain.invoke({
+  input: "what's 3 plus 1132",
+  rendered_tools: renderedTools,
+});
+```
+
+```text
+{ name: 'add', arguments: [ 3, 1132 ], output: '1135' }
+```
+
+## What’s next?
+
+This how-to guide shows the “happy path” when the model correctly
+outputs all the required tool information.
+
+In reality, if you’re using more complex tools, you will start
+encountering errors from the model, especially for models that have not
+been fine tuned for tool calling and for less capable models.
+
+You will need to be prepared to add strategies to improve the output
+from the model; e.g.,
+
+- Provide few shot examples.
+- Add error handling (e.g., catch the exception and feed it back to
+  the LLM to ask it to correct its previous output).
