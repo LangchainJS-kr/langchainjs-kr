@@ -4,7 +4,7 @@ import { themes as prismThemes } from "prism-react-renderer";
 import {ProvidePlugin} from 'webpack'
 import path from "path"
 
-const examplesPath = path.resolve(__dirname, "..", "..", "examples", "src");
+const examplesPath = path.resolve(__dirname, "examples", "src");
 const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
 
 const config: Config = {
@@ -56,9 +56,9 @@ const config: Config = {
       items: [
         {
           type: "docSidebar",
-          sidebarId: "tutorialSidebar",
           position: "left",
-          label: "문서",
+          sidebarId: "integrations",
+          label: "통합",
         },
         {
           href: "https://github.com/froggy1014/langchainjs-kr",
@@ -108,6 +108,7 @@ const config: Config = {
             url: false,
           },
           alias: {
+            "@examples": examplesPath,
             "@mdx_components": mdxComponentsPath,
           },
         },
@@ -115,7 +116,7 @@ const config: Config = {
           rules: [
             {
               test: examplesPath,
-              use: ["json-loader", "./scripts/code-block-loader.js"],
+              use: ["json-loader", "./scripts/code-block-loader.ts"],
             },
             {
               test: /\.ya?ml$/,
