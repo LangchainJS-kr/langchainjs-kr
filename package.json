@@ -17,8 +17,9 @@
   "dependencies": {
     "@docusaurus/core": "3.3.2",
     "@mdx-js/react": "^3.0.0",
+    "@supabase/supabase-js": "^2.43.4",
     "clsx": "^2.0.0",
-    "prism-react-renderer": "^2.3.0",
+    "prism-react-renderer": "^2.3.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
@@ -27,6 +28,14 @@
     "@docusaurus/preset-classic": "^3.3.2",
     "@docusaurus/tsconfig": "3.3.2",
     "@docusaurus/types": "3.3.2",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^8.10.0",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-react": "^7.34.2",
+    "eslint-plugin-react-hooks": "^4.6.2",
     "typescript": "~5.2.2"
   },
   "browserslist": {
