@@ -1,7 +1,265 @@
 ---
 sidebar_position: 4
-title: Build an Extraction Chain
+title: 추출 체인 만들기
 sidebar_class_name: hidden
 pagination_prev: null
 pagination_next: null
 ---
+
+In this tutorial, we will build a chain to extract structured
+information from unstructured text.
+
+:::important
+
+This tutorial will only work with models that support **function/tool
+calling**
+
+:::
+
+## Concepts
+
+Concepts we will cover are: - Using [language
+models](../../docs/concepts/#chat-models) - Using [function/tool
+calling](../../docs/concepts/#function-tool-calling) - Debugging and
+tracing your application using
+[LangSmith](../../docs/concepts/#langsmith)
+
+## Setup
+
+### Installation
+
+To install LangChain run:
+
+```mdx-code-block
+import Npm2Yarn from '@theme/Npm2Yarn';
+
+<Npm2Yarn>
+  langchain
+</Npm2Yarn>
+```
+
+For more details, see our [Installation
+guide](../../docs/how_to/installation/).
+
+### LangSmith
+
+Many of the applications you build with LangChain will contain multiple
+steps with multiple invocations of LLM calls. As these applications get
+more and more complex, it becomes crucial to be able to inspect what
+exactly is going on inside your chain or agent. The best way to do this
+is with [LangSmith](https://smith.langchain.com).
+
+After you sign up at the link above, make sure to set your environment
+variables to start logging traces:
+
+```shell
+export LANGCHAIN_TRACING_V2="true"
+export LANGCHAIN_API_KEY="..."
+```
+
+## The Schema
+
+First, we need to describe what information we want to extract from the
+text.
+
+We’ll use [Zod](https://zod.dev) to define an example schema that
+extracts personal information.
+
+```mdx-code-block
+<Npm2Yarn>
+  zod @langchain/core
+</Npm2Yarn>
+```
+
+```typescript
+import { z } from "zod";
+
+const personSchema = z.object({
+  name: z.string().nullish().describe("The name of the person"),
+  hair_color: z
+    .string()
+    .nullish()
+    .describe("The color of the person's hair if known"),
+  height_in_meters: z.string().nullish().describe("Height measured in meters"),
+});
+```
+
+There are two best practices when defining schema:
+
+1.  Document the **attributes** and the **schema** itself: This
+    information is sent to the LLM and is used to improve the quality of
+    information extraction.
+2.  Do not force the LLM to make up information! Above we used
+    `.nullish()` for the attributes allowing the LLM to output `null` or
+    `undefined` if it doesn’t know the answer.
+
+:::important
+
+For best performance, document the schema well and make sure the model
+isn’t force to return results if there’s no information to be extracted
+in the text.
+
+:::
+
+## The Extractor
+
+Let’s create an information extractor using the schema we defined above.
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+// Define a custom prompt to provide instructions and any additional context.
+// 1) You can add examples into the prompt template to improve extraction quality
+// 2) Introduce additional parameters to take context into account (e.g., include metadata
+//    about the document from which the text was extracted.)
+const prompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    `You are an expert extraction algorithm.
+Only extract relevant information from the text.
+If you do not know the value of an attribute asked to extract,
+return null for the attribute's value.`,
+  ],
+  // Please see the how-to about improving performance with
+  // reference examples.
+  // ["placeholder", "{examples}"],
+  ["human", "{text}"],
+]);
+```
+
+We need to use a model that supports function/tool calling.
+
+Please review [the
+documentation](../../docs/concepts#function-tool-calling) for list of
+some models that can be used with this API.
+
+```typescript
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const llm = new ChatAnthropic({
+  model: "claude-3-sonnet-20240229",
+  temperature: 0,
+});
+
+const runnable = prompt.pipe(llm.withStructuredOutput(personSchema));
+
+const text = "Alan Smith is 6 feet tall and has blond hair.";
+await runnable.invoke({ text });
+```
+
+```text
+{ name: "Alan Smith", hair_color: "blond", height_in_meters: "1.83" }
+```
+
+:::important
+
+Extraction is Generative 🤯
+
+LLMs are generative models, so they can do some pretty cool things like
+correctly extract the height of the person in meters even though it was
+provided in feet!
+
+:::
+
+We can see the LangSmith trace
+[here](https://smith.langchain.com/public/3d44b7e8-e7ca-4e02-951d-3290ccc89d64/r).
+
+Even though we defined our schema with the variable name `personSchema`,
+Zod is unable to infer this name and therefore does not pass it along to
+the model. To help give the LLM more clues as to what your provided
+schema represents, you can also give the schema you pass to
+`withStructuredOutput()` a name:
+
+```typescript
+const runnable = prompt.pipe(
+  llm.withStructuredOutput(personSchema, { name: "person" })
+);
+
+const text = "Alan Smith is 6 feet tall and has blond hair.";
+
+await runnable.invoke({ text });
+```
+
+```text
+{ name: "Alan Smith", hair_color: "blond", height_in_meters: "1.83" }
+```
+
+This can improve performance in many cases.
+
+## Multiple Entities
+
+In **most cases**, you should be extracting a list of entities rather
+than a single entity.
+
+This can be easily achieved using Zod by nesting models inside one
+another.
+
+```typescript
+import { z } from "zod";
+
+const personSchema = z.object({
+  name: z.string().nullish().describe("The name of the person"),
+  hair_color: z
+    .string()
+    .nullish()
+    .describe("The color of the person's hair if known"),
+  height_in_meters: z.number().nullish().describe("Height measured in meters"),
+});
+
+const dataSchema = z.object({
+  people: z.array(personSchema).describe("Extracted data about people"),
+});
+```
+
+:::important
+
+Extraction might not be perfect here. Please continue to see how to use
+**Reference Examples** to improve the quality of extraction, and see the
+**guidelines** section!
+
+:::
+
+```typescript
+const runnable = prompt.pipe(llm.withStructuredOutput(dataSchema));
+const text =
+  "My name is Jeff, my hair is black and i am 6 feet tall. Anna has the same color hair as me.";
+await runnable.invoke({ text });
+```
+
+```text
+{
+  people: [
+    { name: "Jeff", hair_color: "black", height_in_meters: 1.83 },
+    { name: "Anna", hair_color: "black", height_in_meters: null }
+  ]
+}
+```
+
+:::tip
+
+When the schema accommodates the extraction of **multiple entities**, it
+also allows the model to extract **no entities** if no relevant
+information is in the text by providing an empty list.
+
+This is usually a **good** thing! It allows specifying **required**
+attributes on an entity without necessarily forcing the model to detect
+this entity.
+
+:::
+
+We can see the LangSmith trace
+[here](https://smith.langchain.com/public/272096ab-9ac5-43f9-aa00-3b8443477d17/r)
+
+## Next steps
+
+Now that you understand the basics of extraction with LangChain, you’re
+ready to proceed to the rest of the how-to guides:
+
+- [Add Examples](../../docs/how_to/extraction_examples): Learn how to
+  use **reference examples** to improve performance.
+- [Handle Long Text](../../docs/how_to/extraction_long_text): What
+  should you do if the text does not fit into the context window of
+  the LLM?
+- [Use a Parsing Approach](../../docs/how_to/extraction_parse): Use a
+  prompt based approach to extract with models that do not support
+  **tool/function calling**.

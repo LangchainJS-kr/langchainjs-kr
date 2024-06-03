@@ -1,7 +1,358 @@
 ---
 sidebar_position: 0
-title: Build a Simple LLM Application
+title: 간단한 LLM 애플리케이션 만들기
 sidebar_class_name: hidden
 pagination_prev: null
 pagination_next: null
 ---
+
+In this quickstart we’ll show you how to build a simple LLM application.
+This application will translate text from English into another language.
+This is a relatively simple LLM application - it’s just a single LLM
+call plus some prompting. Still, this is a great way to get started with
+LangChain - a lot of features can be built with just some prompting and
+an LLM call!
+
+## Concepts
+
+Concepts we will cover are:
+
+- Using [language models](../../docs/concepts/#chat-models)
+
+- Using [PromptTemplates](../../docs/concepts/#prompt-templates) and
+  [OutputParsers](../../docs/concepts/#output-parsers)
+
+- [Chaining](../../docs/concepts/#langchain-expression-language) a
+  PromptTemplate + LLM + OutputParser using LangChain
+
+- Debugging and tracing your application using
+  [LangSmith](../../docs/concepts/#langsmith)
+
+That’s a fair amount to cover! Let’s dive in.
+
+## Setup
+
+### Installation
+
+To install LangChain run:
+
+```mdx-code-block
+import Npm2Yarn from '@theme/Npm2Yarn';
+import TabItem from '@theme/TabItem';
+import CodeBlock from "@theme/CodeBlock";
+
+<Npm2Yarn>langchain</Npm2Yarn>
+```
+
+For more details, see our [Installation
+guide](../../docs/how_to/installation/).
+
+### LangSmith
+
+Many of the applications you build with LangChain will contain multiple
+steps with multiple invocations of LLM calls. As these applications get
+more and more complex, it becomes crucial to be able to inspect what
+exactly is going on inside your chain or agent. The best way to do this
+is with [LangSmith](https://smith.langchain.com).
+
+After you sign up at the link above, make sure to set your environment
+variables to start logging traces:
+
+```shell
+export LANGCHAIN_TRACING_V2="true"
+export LANGCHAIN_API_KEY="..."
+```
+
+## Detailed walkthrough
+
+In this guide we will build an application to translate user input from
+one language to another.
+
+## Using Language Models
+
+First up, let’s learn how to use a language model by itself. LangChain
+supports many different language models that you can use
+interchangably - select the one you want to use below!
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs openaiParams={`model: "gpt-4"`} />
+```
+
+Let’s first use the model directly. `ChatModel`s are instances of
+LangChain “Runnables”, which means they expose a standard interface for
+interacting with them. To just simply call the model, we can pass in a
+list of messages to the `.invoke` method.
+
+```typescript
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+const messages = [
+  new SystemMessage("Translate the following from English into Italian"),
+  new HumanMessage("hi!"),
+];
+
+await model.invoke(messages);
+```
+
+```text
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: {
+    content: "ciao!",
+    tool_calls: [],
+    invalid_tool_calls: [],
+    additional_kwargs: { function_call: undefined, tool_calls: undefined },
+    response_metadata: {}
+  },
+  lc_namespace: [ "langchain_core", "messages" ],
+  content: "ciao!",
+  name: undefined,
+  additional_kwargs: { function_call: undefined, tool_calls: undefined },
+  response_metadata: {
+    tokenUsage: { completionTokens: 3, promptTokens: 20, totalTokens: 23 },
+    finish_reason: "stop"
+  },
+  tool_calls: [],
+  invalid_tool_calls: []
+}
+```
+
+If we’ve enable LangSmith, we can see that this run is logged to
+LangSmith, and can see the [LangSmith
+trace](https://smith.langchain.com/public/45f1a650-38fb-41e1-9b61-becc0684f2ce/r)
+
+## OutputParsers
+
+Notice that the response from the model is an `AIMessage`. This contains
+a string response along with other metadata about the response.
+Oftentimes we may just want to work with the string response. We can
+parse out just this response by using a simple output parser.
+
+We first import the simple output parser.
+
+```typescript
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+const parser = new StringOutputParser();
+```
+
+One way to use it is to use it by itself. For example, we could save the
+result of the language model call and then pass it to the parser.
+
+```typescript
+const result = await model.invoke(messages);
+```
+
+```typescript
+await parser.invoke(result);
+```
+
+```text
+"ciao!"
+```
+
+More commonly, we can “chain” the model with this output parser. This
+means this output parser will get called every time in this chain. This
+chain takes on the input type of the language model (string or list of
+message) and returns the output type of the output parser (string).
+
+We can easily create the chain using the `.pipe` method. The `.pipe`
+method is used in LangChain to combine two elements together.
+
+```typescript
+const chain = model.pipe(parser);
+```
+
+```typescript
+await chain.invoke(messages);
+```
+
+```text
+"Ciao!"
+```
+
+If we now look at LangSmith, we can see that the chain has two steps:
+first the language model is called, then the result of that is passed to
+the output parser. We can see the [LangSmith
+trace](https://smith.langchain.com/public/05bec1c1-fc51-4b2c-ab3b-4b63709e4462/r)
+
+## Prompt Templates
+
+Right now we are passing a list of messages directly into the language
+model. Where does this list of messages come from? Usually it
+constructed from a combination of user input and application logic. This
+application logic usually takes the raw user input and transforms it
+into a list of messages ready to pass to the language model. Common
+transformations include adding a system message or formatting a template
+with the user input.
+
+PromptTemplates are a concept in LangChain designed to assist with this
+transformation. They take in raw user input and return data (a prompt)
+that is ready to pass into a language model.
+
+Let’s create a PromptTemplate here. It will take in two user variables:
+
+- `language`: The language to translate text into
+- `text`: The text to translate
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+```
+
+First, let’s create a string that we will format to be the system
+message:
+
+```typescript
+const systemTemplate = "Translate the following into {language}:";
+```
+
+Next, we can create the PromptTemplate. This will be a combination of
+the `systemTemplate` as well as a simpler template for where the put the
+text
+
+```typescript
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", systemTemplate],
+  ["user", "{text}"],
+]);
+```
+
+The input to this prompt template is a dictionary. We can play around
+with this prompt template by itself to see what it does by itself
+
+```typescript
+const result = await promptTemplate.invoke({ language: "italian", text: "hi" });
+
+result;
+```
+
+```text
+ChatPromptValue {
+  lc_serializable: true,
+  lc_kwargs: {
+    messages: [
+      SystemMessage {
+        lc_serializable: true,
+        lc_kwargs: {
+          content: "Translate the following into italian:",
+          additional_kwargs: {},
+          response_metadata: {}
+        },
+        lc_namespace: [ "langchain_core", "messages" ],
+        content: "Translate the following into italian:",
+        name: undefined,
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      HumanMessage {
+        lc_serializable: true,
+        lc_kwargs: { content: "hi", additional_kwargs: {}, response_metadata: {} },
+        lc_namespace: [ "langchain_core", "messages" ],
+        content: "hi",
+        name: undefined,
+        additional_kwargs: {},
+        response_metadata: {}
+      }
+    ]
+  },
+  lc_namespace: [ "langchain_core", "prompt_values" ],
+  messages: [
+    SystemMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "Translate the following into italian:",
+        additional_kwargs: {},
+        response_metadata: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "Translate the following into italian:",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    },
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: { content: "hi", additional_kwargs: {}, response_metadata: {} },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "hi",
+      name: undefined,
+      additional_kwargs: {},
+      response_metadata: {}
+    }
+  ]
+}
+```
+
+We can see that it returns a `ChatPromptValue` that consists of two
+messages. If we want to access the messages directly we do:
+
+```typescript
+result.toChatMessages();
+```
+
+```text
+[
+  SystemMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Translate the following into italian:",
+      additional_kwargs: {},
+      response_metadata: {}
+    },
+    lc_namespace: [ "langchain_core", "messages" ],
+    content: "Translate the following into italian:",
+    name: undefined,
+    additional_kwargs: {},
+    response_metadata: {}
+  },
+  HumanMessage {
+    lc_serializable: true,
+    lc_kwargs: { content: "hi", additional_kwargs: {}, response_metadata: {} },
+    lc_namespace: [ "langchain_core", "messages" ],
+    content: "hi",
+    name: undefined,
+    additional_kwargs: {},
+    response_metadata: {}
+  }
+]
+```
+
+We can now combine this with the model and the output parser from above.
+This will chain all three components together.
+
+```typescript
+const chain = promptTemplate.pipe(model).pipe(parser);
+```
+
+```typescript
+await chain.invoke({ language: "italian", text: "hi" });
+```
+
+```text
+"ciao"
+```
+
+If we take a look at the LangSmith trace, we can see all three
+components show up in the [LangSmith
+trace](https://smith.langchain.com/public/cef6edcd-39ed-4c1e-86f7-491a1b611aeb/r)
+
+## Conclusion
+
+That’s it! In this tutorial we’ve walked through creating our first
+simple LLM application. We’ve learned how to work with language models,
+how to parse their outputs, how to create a prompt template, and how to
+get great observability into chains you create with LangSmith.
+
+This just scratches the surface of what you will want to learn to become
+a proficient AI Engineer. Luckily - we’ve got a lot of other resources!
+
+For more in-depth tutorials, check out out
+[Tutorials](../../docs/tutorials) section.
+
+If you have specific questions on how to accomplish particular tasks,
+see our [How-To Guides](../../docs/how_to) section.
+
+For reading up on the core concepts of LangChain, we’ve got detailed
+[Conceptual Guides](../../docs/concepts)
