@@ -90,3 +90,7 @@
 5. **최종 승인**:
    - 모든 검수 절차를 통과한 번역본을 최종 승인
    - 승인된 번역본은 레포지토리에 병합
+
+## 익스텐션
+
+- [MarkdownLint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
