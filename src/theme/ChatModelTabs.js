@@ -135,17 +135,17 @@ export default function ChatModelTabs(props) {
 
   return (
     <div>
-      <h3>Pick your chat model:</h3>
+      <h3>사용할 채팅 모델 선택:</h3>
       <Tabs groupId="modelTabs">
         {displayedTabs.map((tab) => (
           <TabItem value={tab.value} label={tab.label} key={tab.value}>
-            <h4>Install dependencies</h4>
+            <h4>디펜던시 설치</h4>
             <InstallationInfo>
               {[tab.dependencies, additionalDependencies].join(" ")}
             </InstallationInfo>
-            <h4>Add environment variables</h4>
+            <h4>환경변수 추가</h4>
             <CodeBlock language="bash">{tab.envs}</CodeBlock>
-            <h4>Instantiate the model</h4>
+            <h4>모델 인스턴스화</h4>
             <CodeBlock language="typescript">{tab.text}</CodeBlock>
           </TabItem>
         ))}
