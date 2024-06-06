@@ -271,11 +271,9 @@ package/project.Python toolbelt preferences:Conversatin samples:After going thro
 
 ### 더 깊이 들어가기
 
-`DocumentLoader`: 소스에서 데이터를 목록 형식으로 로드하는 클래스입니다.
+`DocumentLoaders`: 소스에서 데이터를 목록 형식으로 로드하는 클래스입니다.
 - [Docs](../../docs/concepts#document-loaders): 사용 방법에 대한 상세 문서
-
-`DocumentLoaders`.
-- [Integrations](../../docs/integrations/document_loaders/)
+- [Integrations](../../docs/integrations/document_loaders/): 40개 이상의 통합이 있습니다.
 - [Interface](https://v02.api.js.langchain.com/classes/langchain_document_loaders_base.BaseDocumentLoader.html): 기본 인터페이스에 대한 API 레퍼런스
 
 ## 2. 인덱싱: 분할
@@ -329,19 +327,15 @@ allSplits[10].metadata;
 
 ### 더 깊이 들어가기
 
-`TextSplitter`: `Document` 목록을 더 작은 청크로 분할하는 객체.
-`DocumentTransformers`의 하위 클래스입니다. - 각 분할의 위치
-("컨텍스트")를 원본 `Document`에서 유지하는 `Context-aware splitters`를
-탐색합니다: - [Markdown 파일](../../docs/how_to/code_splitter/#markdown) -
-[코드](../../docs/how_to/code_splitter/) (15+ 언어) -
-[인터페이스](https://v02.api.js.langchain.com/classes/langchain_text_splitter.TextSplitter.html):
-기본 인터페이스에 대한 API 레퍼런스.
-
-`DocumentTransformer`: `Document` 목록에 변환을 수행하는 객체. -
-문서: `DocumentTransformer`를 사용하는 방법에 대한 자세한 문서 -
-[통합](../../docs/integrations/document_transformers) -
-[인터페이스](https://v02.api.js.langchain.com/modules/langchain_schema_document.html#BaseDocumentTransformer):
-기본 인터페이스에 대한 API 레퍼런스.
+`TextSplitter`: `Document` 목록을 더 작은 청크로 분할하는 객체이고, `DocumentTransformers`의 하위 클래스입니다. 
+  - 컨텍스트들의 분할된 각 위치를 원본 문서에 유지하는 `컨텍스트 인식 스플리터`를 살펴보세요:
+    - [Markdown 파일](../../docs/how_to/code_splitter/#markdown): 위 예제에서 사용된 마크다운 코드스플리터 사용법
+    - [코드 스플리터](../../docs/how_to/code_splitter/): 15개 이상의 언어 지원
+    - [인터페이스](https://v02.api.js.langchain.com/classes/langchain_textsplitters.TextSplitter.html): 기본 인터페이스에 대한 API 레퍼런스
+  
+`DocumentTransformer`: `Document` 목록에 변환을 수행하는 객체입니다.. 
+  - [통합](../../docs/integrations/document_transformers) : 3개 이상의 통합 선택가능
+  - [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_documents.BaseDocumentTransformer.html): 기본 인터페이스에 대한 API 레퍼런스
 
 ## 3. 인덱싱: 저장 \{#indexing-store}
 
@@ -371,16 +365,16 @@ const vectorStore = await MemoryVectorStore.fromDocuments(
 ### 더 깊이 들어가기
 
 `Embeddings`: 텍스트를 임베딩으로 변환하는 텍스트 임베딩 모델의 래퍼.
-- [문서](../../docs/concepts#embedding-models): 임베딩 사용 방법에 대한 자세한 문서.
-- [통합](../../docs/integrations/text_embedding): 30+ 개의 통합 선택 가능.
+- [문서](../../docs/concepts#embedding-models): 임베딩 사용 방법에 대한 자세한 문서
+- [통합](../../docs/integrations/text_embedding): 30개 이상의 통합 선택 가능
 - [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_embeddings.Embeddings.html):
-기본 인터페이스에 대한 API 레퍼런스.
+기본 인터페이스에 대한 API 레퍼런스
 
 `VectorStore`: 임베딩을 저장하고 쿼리하는 데 사용되는 벡터 데이터베이스의 래퍼.
-- [문서](../../docs/concepts#vectorstores): 벡터스토어 사용 방법에 대한 자세한 문서.
-- [통합](../../docs/integrations/vectorstores): 40+ 개의 통합 선택 가능.
+- [문서](../../docs/concepts#vectorstores): 벡터스토어 사용 방법에 대한 자세한 문서
+- [통합](../../docs/integrations/vectorstores): 40개 이상의 통합 선택 가능
 - [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_vectorstores.VectorStore.html):
-기본 인터페이스에 대한 API 레퍼런스.
+기본 인터페이스에 대한 API 레퍼런스
 
 이로써 **인덱싱** 파이프라인 부분이 완료되었습니다. 
 이 시점에서 우리는 블로그 게시물의 청크된 콘텐츠를 포함하는 쿼리 가능한 
@@ -435,13 +429,13 @@ hard tasks into smaller and simpler steps. CoT transforms big tasks into multipl
 벡터스토어는 주로 검색에 사용되지만, 검색을 하는 다른 방법들도 있습니다.
 
 `리트리버`: 텍스트 쿼리에 따라 `문서`를 반환하는 객체입니다 
-  - [문서](../../docs/concepts#retrievers): 인터페이스와 기본 검색 기술에 대한 추가 문서. 일부 검색 기술에는 다음이 포함됩니다: 
+  - [리트리버 문서](../../docs/concepts#retrievers): 인터페이스와 기본 검색 기술에 대한 추가 문서. 일부 검색 기술에는 다음이 포함됩니다: 
     - `MultiQueryRetriever`는 검색 적중률을 높이기 위해 [입력 질문의 변형을 생성합니다](../../docs/how_to/multiple_queries/). 
     - `MultiVectorRetriever` (아래 다이어그램 참조)는 또한 검색 적중률을 높이기 위해 임베딩의 변형을 생성합니다. 
   - 최대 한계 관련성은 중복된 컨텍스트 전달을 방지하기 위해 검색된 문서 중 관련성과 다양성을 선택합니다. 
-  - 문서는 벡터스토어 검색 중 메타데이터 필터를 사용하여 필터링될 수 있습니다. 
-  - 통합: 검색 서비스와의 통합. 
-  - 인터페이스: 기본 인터페이스에 대한 API 레퍼런스.
+  - 문서는 벡터스토어 검색 중 메타데이터 필터를 사용하여 필터링될 수 있습니다.
+  - [통합](../../docs/integrations/retrievers): 검색 서비스와의 통합
+  - [인터페이스](https://v02.api.js.langchain.com/modules/langchain_core_retrievers.html): 기본 인터페이스에 대한 API 레퍼런스
 
 ## 5. 검색과 생성: 생성하기 \{#retrieval-and-generation-generate}
 
@@ -639,13 +633,6 @@ pose
 
 로컬에서 실행되는 모델과 함께 RAG 가이드를 
 [여기](../../docs/tutorials/local_rag/)에서 확인하세요.
-
-
-#### Customizing the prompt
-
-As shown above, we can load prompts (e.g., [this RAG
-prompt](https://smith.langchain.com/hub/rlm/rag-prompt?organizationId=9213bdc8-a184-442b-901a-cd86ebf8ca6f))
-from the prompt hub. The prompt can also be easily customized:
 
 #### 프롬프트 커스터마이징
 
