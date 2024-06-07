@@ -8,9 +8,9 @@ addAssignees: author
 # PR에 추가할 리뷰어들 목록(GitHub 유저 이름)
 reviewers:
   - froggy1014
-  # - seochan99
+  - seochan99
   - KoJaem
-  # - henrynoowah
+  - henrynoowah
 
 # 풀 리퀘스트에 추가된 리뷰어 수
 # 모든 리뷰어를 추가하려면 0으로 설정합니다(기본값: 0).
