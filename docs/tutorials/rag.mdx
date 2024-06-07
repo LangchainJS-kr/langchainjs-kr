@@ -5,123 +5,93 @@ pagination_prev: null
 pagination_next: null
 ---
 
-One of the most powerful applications enabled by LLMs is sophisticated
-question-answering (Q&A) chatbots. These are applications that can
-answer questions about specific source information. These applications
-use a technique known as Retrieval Augmented Generation, or RAG.
+LLM으로 구현할 수 있는 가장 강력한 애플리케이션 중 하나는 정교한 질의응답(Q&A) 챗봇, 즉 특정 정보에 관한 질문에 답할 수 있는 애플리케이션입니다. 
+이러한 애플리케이션은 검색 증강 생성(RAG)이라는 기술을 사용합니다. 
 
-This tutorial will show how to build a simple Q&A application over a
-text data source. Along the way we’ll go over a typical Q&A architecture
-and highlight additional resources for more advanced Q&A techniques.
-We’ll also see how LangSmith can help us trace and understand our
-application. LangSmith will become increasingly helpful as our
-application grows in complexity.
+이 튜토리얼에서는 텍스트 데이터를 기반으로 간단한 Q&A** 애플리케이션을 만드는 방법을 
+보여드리겠습니다. 진행하면서 일반적인** Q&A 아키텍처를 살펴보고, 더 고급 Q&A 기술을 위한 추가 리소스를 강조할 것입니다. 
+또한, LangSmith가 우리의 애플리케이션을 추적하고 이해하는 데 어떻게 도움이 되는지도 살펴볼 것입니다. 
+애플리케이션의 복잡성이 증가함에 따라 LangSmith는 점점 더 유용해질 것입니다.
 
-## What is RAG?
+## RAG (Retrieval-Augmented Generation** : 검색 증강 생성)이란?**
 
-RAG is a technique for augmenting LLM knowledge with additional data.
+RAG는 추가 데이터를 사용하여 거대 언어 모델(LLM)의 지식을 보강하는 기술입니다.
 
-LLMs can reason about wide-ranging topics, but their knowledge is
-limited to the public data up to a specific point in time that they were
-trained on. If you want to build AI applications that can reason about
-private data or data introduced after a model’s cutoff date, you need to
-augment the knowledge of the model with the specific information it
-needs. The process of bringing the appropriate information and inserting
-it into the model prompt is known as Retrieval Augmented Generation
-(RAG).
+대규모 언어 모델(LLM)은 광범위한 주제에 대해 추론할 수 있지만, 지식은 훈련된 시점까지 공개된 데이터에 한정됩니다. 
+만약 비공개 데이터나 모델의 학습 종료일 이후에 도입된 데이터를 기반으로 AI 애플리케이션을 구축하려면, 모델의 지식을 필요한 정보로 보강해야 합니다. 
+적절한 정보를 가져와 모델 프롬프트에 삽입하는 과정을 정보 검색-증강 생성(Retrieval Augmented Generation, RAG)이라고 합니다.
 
-LangChain has a number of components designed to help build Q&A
-applications, and RAG applications more generally.
+LangChain에는 Q&A 애플리케이션 및 일반적으로 RAG 애플리케이션을 구축하는 데 도움이 되는 여러 컴포넌트가 있습니다.
 
-**Note**: Here we focus on Q&A for unstructured data. If you are
-interested for RAG over structured data, check out our tutorial on doing
-[question/answering over SQL data](../../docs/tutorials/sql_qa).
+**참고**: 여기서는 비정형 데이터에 대한 질의응답에 중점을 둡니다. 
+구조화된 데이터에 대한 RAG에 관심이 있으시면, [SQL 데이터에 대한 질의응답](../../docs/tutorials/sql_qa) 튜토리얼을 확인하세요.
 
-## Concepts
 
-A typical RAG application has two main components:
+## 개념
 
-**Indexing**: a pipeline for ingesting data from a source and indexing
-it. _This usually happens offline._
+일반적인 RAG 애플리케이션에는 두 가지 주요 컴포넌트가 있습니다:
 
-**Retrieval and generation**: the actual RAG chain, which takes the user
-query at run time and retrieves the relevant data from the index, then
-passes that to the model.
+**인덱싱**: 소스로부터 데이터를 수집하고 인덱싱하는 파이프라인입니다. _이는 보통 오프라인에서 이루어집니다._
 
-The most common full sequence from raw data to answer looks like:
+**검색 및 생성**: 런타임에 사용자 쿼리를 받아 인덱스에서 관련 데이터를 검색한 후, 모델에 전달하는 실제 RAG 체인입니다.
 
-### Indexing
+미가공 데이터에서 답변까지의 가장 일반적인 절차는 다음과 같습니다:
 
-1.  **Load**: First we need to load our data. This is done with
-    [DocumentLoaders](../../docs/concepts/#document-loaders).
-2.  **Split**: [Text splitters](../../docs/concepts/#text-splitters)
-    break large `Documents` into smaller chunks. This is useful both for
-    indexing data and for passing it in to a model, since large chunks
-    are harder to search over and won’t fit in a model’s finite context
-    window.
-3.  **Store**: We need somewhere to store and index our splits, so that
-    they can later be searched over. This is often done using a
-    [VectorStore](../../docs/concepts/#vectorstores) and
-    [Embeddings](../../docs/concepts/#embedding-models) model.
+
+### 인덱싱
+
+1.  **로드**: 먼저 데이터를 로드해야 합니다. 이는 [문서로더](../../docs/concepts/#document-loaders)로 수행됩니다.
+2.  **분할**: [텍스트 스플리터](../../docs/concepts/#text-splitters)는 큰 `문서`를 작은 청크로 분할합니다. 
+    이는 데이터를 인덱싱하거나 모델에 전달하는 데 유용합니다. 큰 청크는 검색하기 어렵고 모델의 제한된 컨텍스트 윈도우에 맞지 않기 때문입니다.
+3.  **저장**: 나중에 검색할 수 있도록 분할된 데이터를 저장하고 인덱싱할 곳이 필요합니다.
+    이는 주로 [벡터스토어](../../docs/concepts/#vectorstores)와
+    [임베딩](../../docs/concepts/#embedding-models) 모델을 사용하여 수행됩니다.
+
+
 
 <figure>
-  <img src="../../static/img/rag_indexing.png" alt="index_diagram" />
-  <figcaption aria-hidden="true">index_diagram</figcaption>
+  <img src="/img/rag_indexing.png" alt="index_diagram" />
 </figure>
 
-### Retrieval and generation
+### 검색과 생성
 
-1.  **Retrieve**: Given a user input, relevant splits are retrieved from
-    storage using a [Retriever](../../docs/concepts/#retrievers).
-2.  **Generate**: A [ChatModel](../../docs/concepts/#chat-models) /
-    [LLM](../../docs/concepts/#llms) produces an answer using a prompt
-    that includes the question and the retrieved data
+1. **검색**: 사용자 입력이 주어지면, [리트리버](../../docs/concepts/#retrievers)를 사용하여 관련된 청크들이 저장소에서 검색됩니다.
+2. **생성**: [채팅모델](../../docs/concepts/#chat-models) /
+   [LLM](../../docs/concepts/#llms)이 질문과 검색된 데이터를 포함하는
+   프롬프트를 사용하여 답변을 생성합니다.
 
 <figure>
   <img
-    src="../../static/img/rag_retrieval_generation.png"
+    src="/img/rag_retrieval_generation.png"
     alt="retrieval_diagram"
   />
-  <figcaption aria-hidden="true">retrieval_diagram</figcaption>
 </figure>
 
-## Setup
+## 설정
 
-### Installation
+### 설치
 
-To install LangChain run:
+LangChain을 설치하려면 다음 명령어를 실행하세요:
 
 `bash npm2yarn npm i langchain`
 
-For more details, see our [Installation
-guide](../../docs/how_to/installation).
+자세한 내용은 [설치 가이드](../../docs/how_to/installation)를 참조하세요.
 
 ### LangSmith
 
-Many of the applications you build with LangChain will contain multiple
-steps with multiple invocations of LLM calls. As these applications get
-more and more complex, it becomes crucial to be able to inspect what
-exactly is going on inside your chain or agent. The best way to do this
-is with [LangSmith](https://smith.langchain.com).
+LangChain으로 구축하는 많은 애플리케이션은 여러 단계와 여러 번의 LLM 호출을 포함합니다.
+이러한 애플리케이션이 점점 더 복잡해짐에 따라 체인 또는 에이전트 내부에서 
+무엇이 일어나고 있는지 확인하는 것이 중요합니다. 이를 위한 가장 좋은 방법은 
+[LangSmith](https://smith.langchain.com)를 사용하는 것입니다.
 
-After you sign up at the link above, make sure to set your environment
-variables to start logging traces:
+위 링크에서 가입한 후, 환경 변수를 설정하여 추적 로그를 시작하세요:
+
 
 ```shell
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="..."
 ```
 
-## Preview
-
-In this guide we’ll build a QA app over as website. The specific website
-we will use isthe [LLM Powered Autonomous
-Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) blog post
-by Lilian Weng, which allows us to ask questions about the contents of
-the post.
-
-We can create a simple indexing pipeline and RAG chain to do this in ~20
-lines of code:
 
 ```mdx-code-block
 import ChatModelTabs from "@theme/ChatModelTabs";
@@ -129,15 +99,14 @@ import ChatModelTabs from "@theme/ChatModelTabs";
 <ChatModelTabs customVarName="llm" />
 ```
 
-## Preview
+## 미리보기
 
-In this guide we’ll build a QA app over the [LLM Powered Autonomous
-Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) blog post
-by Lilian Weng, which allows us to ask questions about the contents of
-the post.
+이 가이드에서는 콘텐츠 사용 허락을 받은 [LLM Powered Autonomous
+Agents](https://lilianweng.github.io/posts/2023-06-23-agent/)라는 
+Lilian Weng님의 블로그 게시물 기반으로 질의응답(QA) 애플리케이션을 구축할 것입니다. 
 
-We can create a simple indexing pipeline and RAG chain to do this in
-only a few lines of code:
+이를 위해 몇 줄의 코드만으로 간단한 인덱싱 파이프라인과 RAG 체인을 만들 수 있습니다:
+
 
 ```typescript
 import "cheerio";
@@ -185,7 +154,7 @@ const retrievedDocs = await retriever.getRelevantDocuments(
 );
 ```
 
-Let’s see what this prompt actually looks like:
+이 프롬프트가 실제로 어떻게 구성되었는지 살펴봅시다:
 
 ```typescript
 console.log(prompt.promptMessages.map((msg) => msg.prompt.template).join("\n"));
@@ -209,14 +178,12 @@ await ragChain.invoke({
 "Task decomposition is a technique used to break down complex tasks into smaller and simpler steps. I"... 259 more characters
 ```
 
-Checkout [this LangSmith
-trace](https://smith.langchain.com/public/54cffec3-5c26-477d-b56d-ebb66a254c8e/r)
-of the chain above.
+위 체인의 [LangSmith trace](https://smith.langchain.com/public/54cffec3-5c26-477d-b56d-ebb66a254c8e/r)를 확인해 보세요.
 
-You can also construct the RAG chain above in a more declarative way
-using a `RunnableSequence`. `createStuffDocumentsChain` is basically a
-wrapper around `RunnableSequence`, so for more complex chains and
-customizability, you can use `RunnableSequence` directly.
+또한, `RunnableSequence`를 사용하여 위의 RAG 체인을 보다 선언적인 방식으로 구성할 수도 있습니다.
+`createStuffDocumentsChain`은 기본적으로 `RunnableSequence`의 래퍼이므로, 더 복잡한 체인과
+커스터마이즈를 위해 `RunnableSequence`를 직접 사용할 수 있습니다.
+
 
 ```typescript
 import { formatDocumentsAsString } from "langchain/util/document";
@@ -244,28 +211,20 @@ await declarativeRagChain.invoke("What is task decomposition?");
 "Task decomposition is a technique used to break down complex tasks into smaller and simpler steps. I"... 208 more characters
 ```
 
-LangSmith
-[trace](https://smith.langchain.com/public/c48e186c-c9da-4694-adf2-3a7c94362ec2/r).
+LangSmith [trace](https://smith.langchain.com/public/c48e186c-c9da-4694-adf2-3a7c94362ec2/r).
 
-## Detailed walkthrough
+## 톺아보기
 
-Let’s go through the above code step-by-step to really understand what’s
-going on.
+위의 코드를 단계별로 살펴보며 실제로 어떤 일이 일어나고 있는지 이해해 봅시다.
 
-## 1. Indexing: Load {#indexing-load}
+## 1. 인덱싱: 로드  \{#indexing-load}
 
-We need to first load the blog post contents. We can use
-[DocumentLoaders](../../docs/concepts#document-loaders) for this, which
-are objects that load in data from a source and return a list of
-[Documents](https://v02.api.js.langchain.com/classes/langchain_core_documents.Document.html).
-A Document is an object with some pageContent (`string`) and metadata
-(`Record<string, any>`).
+먼저 블로그 게시물의 내용을 로드해야 합니다. 이를 위해 [문서로더](../../docs/concepts#document-loaders)를 사용할 수 있습니다.
+문서로더는 소스에서 데이터를 로드하고 [문서](https://v02.api.js.langchain.com/classes/langchain_core_documents.Document.html) 목록을 반환하는 객체입니다. 
+문서는 페이지 콘텐츠(`string`)와 메타데이터(`Record<string, any>`)를 가진 객체입니다.
 
-In this case we’ll use the
-[CheerioWebBaseLoader](https://v02.api.js.langchain.com/classes/langchain_document_loaders_web_cheerio.CheerioWebBaseLoader.html),
-which uses cheerio to load HTML form web URLs and parse it to text. We
-can pass custom selectors to the constructor to only parse specific
-elements:
+이 경우, cheerio를 사용하여 웹 URL의 HTML 형식을 로드하고 텍스트로 파싱하는 [CheerioWebBaseLoader](https://v02.api.js.langchain.com/classes/langchain_document_loaders_web_cheerio.CheerioWebBaseLoader.html)를 사용할 것입니다. 
+특정 엘리먼트만 파싱하도록 사용자 정의 선택자를 생성자에 전달할 수 있습니다:
 
 ```typescript
 const pTagSelector = "p";
@@ -310,36 +269,26 @@ package/project.Python toolbelt preferences:Conversatin samples:After going thro
 “ arXiv preprint arXiv:2302.02676 (2023).[4] Liu et al. “LLM+P: Empowering Large Language Models with Optimal Planning Proficiency” arXiv preprint arXiv:2304.11477 (2023).[5] Yao et al. “ReAct: Synergizing reasoning and acting in language models.” ICLR 2023.[6] Google Blog. “Announcing ScaNN: Efficient Vector Similarity Search” July 28, 2020.[7] https://chat.openai.com/share/46ff149e-a4c7-4dd7-a800-fc4a642ea389[8] Shinn & Labash. “Reflexion: an autonomous agent with dynamic memory and self-reflection” arXiv preprint arXiv:2303.11366 (2023).[9] Laskin et al. “In-context Reinforcement Learning with Algorithm Distillation” ICLR 2023.[10] Karpas et al. “MRKL Systems A modular, neuro-symbolic architecture that combines large language models, external knowledge sources and discrete reasoning.” arXiv preprint arXiv:2205.00445 (2022).[11] Weaviate Blog. Why is Vector Search so fast? Sep 13, 2022.[12] Li et al. “API-Bank: A Benchmark for Tool-Augmented LLMs” arXiv preprint arXiv:2304.08244 (2023).[13] Shen et al. “HuggingGPT: Solving AI Tasks with ChatGPT and its Friends in HuggingFace” arXiv preprint arXiv:2303.17580 (2023).[14] Bran et al. “ChemCrow: Augmenting large-language models with chemistry tools.” arXiv preprint arXiv:2304.05376 (2023).[15] Boiko et al. “Emergent autonomous scientific research capabilities of large language models.” arXiv preprint arXiv:2304.05332 (2023).[16] Joon Sung Park, et al. “Generative Agents: Interactive Simulacra of Human Behavior.” arXiv preprint arXiv:2304.03442 (2023).[17] AutoGPT. https://github.com/Significant-Gravitas/Auto-GPT[18] GPT-Engineer. https://github.com/AntonOsika/gpt-engineer
 ```
 
-### Go deeper
+### 더 깊이 들어가기
 
-`DocumentLoader`: Class that loads data from a source as list of
-Documents. - [Docs](../../docs/concepts#document-loaders): Detailed
-documentation on how to use
+`DocumentLoaders`: 소스에서 데이터를 목록 형식으로 로드하는 클래스입니다.
+- [Docs](../../docs/concepts#document-loaders): 사용 방법에 대한 상세 문서
+- [Integrations](../../docs/integrations/document_loaders/): 40개 이상의 통합이 있습니다.
+- [Interface](https://v02.api.js.langchain.com/classes/langchain_document_loaders_base.BaseDocumentLoader.html): 기본 인터페이스에 대한 API 레퍼런스
 
-`DocumentLoaders`. -
-[Integrations](../../docs/integrations/document_loaders/) -
-[Interface](https://v02.api.js.langchain.com/classes/langchain_document_loaders_base.BaseDocumentLoader.html):
-API reference for the base interface.
+## 2. 인덱싱: 분할
 
-## 2. Indexing: Split {#indexing-split}
+로드된 문서는 42,000자 이상입니다. 이는 많은 모델의 컨텍스트 윈도우를 초과하는 길이입니다. 
+전체 게시물을 컨텍스트 윈도우에 맞출 수 있는 모델조차도 긴 입력에서 정보를 찾기 어려울 수 있습니다.
 
-Our loaded document is over 42k characters long. This is too long to fit
-in the context window of many models. Even for those models that could
-fit the full post in their context window, models can struggle to find
-information in very long inputs.
+이를 처리하기 위해 `Document`를 청크로 분할하여 임베딩하고 벡터스토어에 저장합니다.
+이렇게 하면 런타임에 블로그 게시물의 가장 관련성 높은 부분만 검색할 수 있습니다.
 
-To handle this we’ll split the `Document` into chunks for embedding and
-vector storage. This should help us retrieve only the most relevant bits
-of the blog post at run time.
-
-In this case we’ll split our documents into chunks of 1000 characters
-with 200 characters of overlap between chunks. The overlap helps
-mitigate the possibility of separating a statement from important
-context related to it. We use the
-[RecursiveCharacterTextSplitter](../../docs/how_to/recursive_text_splitter/),
-which will recursively split the document using common separators like
-new lines until each chunk is the appropriate size. This is the
-recommended text splitter for generic text use cases.
+이 경우 문서를 1,000자 청크로 나누고 청크 간에 200자 겹치게 할 것입니다. 
+오버랩은 중요한 문맥과 관련된 진술이 분리되는 가능성을 줄여줍니다. 
+[RecursiveCharacterTextSplitter](../../docs/how_to/recursive_text_splitter/)를 사용합니다. 
+이 스플리터는 공통 구분 기호인 새 줄 등을 사용하여 적절한 크기의 청크가 될 때까지 재귀적으로 문서를 분할합니다. 
+이는 일반 텍스트 사용 사례에 권장되는 텍스트 스플리터입니다.
 
 ```typescript
 const textSplitter = new RecursiveCharacterTextSplitter({
@@ -376,40 +325,32 @@ allSplits[10].metadata;
 }
 ```
 
-### Go deeper
+### 더 깊이 들어가기
 
-`TextSplitter`: Object that splits a list of `Document`s into smaller
-chunks. Subclass of `DocumentTransformers`. - Explore
-`Context-aware splitters`, which keep the location (“context”) of each
-split in the original `Document`: - [Markdown
-files](../../docs/how_to/code_splitter/#markdown) -
-[Code](../../docs/how_to/code_splitter/) (15+ langs) -
-[Interface](https://v02.api.js.langchain.com/classes/langchain_text_splitter.TextSplitter.html):
-API reference for the base interface.
+`TextSplitter`: `Document` 목록을 더 작은 청크로 분할하는 객체이고, `DocumentTransformers`의 하위 클래스입니다. 
+  - 컨텍스트들의 분할된 각 위치를 원본 문서에 유지하는 `컨텍스트 인식 스플리터`를 살펴보세요:
+    - [Markdown 파일](../../docs/how_to/code_splitter/#markdown): 위 예제에서 사용된 마크다운 코드스플리터 사용법
+    - [코드 스플리터](../../docs/how_to/code_splitter/): 15개 이상의 언어 지원
+    - [인터페이스](https://v02.api.js.langchain.com/classes/langchain_textsplitters.TextSplitter.html): 기본 인터페이스에 대한 API 레퍼런스
+  
+`DocumentTransformer`: `Document` 목록에 변환을 수행하는 객체입니다.. 
+  - [통합](../../docs/integrations/document_transformers) : 3개 이상의 통합 선택가능
+  - [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_documents.BaseDocumentTransformer.html): 기본 인터페이스에 대한 API 레퍼런스
 
-`DocumentTransformer`: Object that performs a transformation on a list
-of `Document`s. - Docs: Detailed documentation on how to use
-`DocumentTransformer`s -
-[Integrations](../../docs/integrations/document_transformers) -
-[Interface](https://v02.api.js.langchain.com/modules/langchain_schema_document.html#BaseDocumentTransformer):
-API reference for the base interface.
+## 3. 인덱싱: 저장 \{#indexing-store}
 
-## 3. Indexing: Store {#indexing-store}
+이제 28개의 텍스트 청크를 인덱싱하여 런타임에 검색할 수 있어야 합니다. 
+가장 일반적인 방법은 각 분활된 문서의 내용을 임베딩하고 이 임베딩을 
+벡터 데이터베이스(또는 벡터스토어)에 삽입하는 것입니다. 분할된 문서를 검색하려면
+텍스트 검색 쿼리를 가져와 임베딩하고, 일종의 "유사성" 검색을 수행하여 
+쿼리 임베딩과 가장 유사한 임베딩을 가진 저장된 분할을 식별합니다. 
+가장 간단한 유사성 측정 방법은 코사인 유사성입니다. 각 임베딩 쌍(고차원 벡터)의
+각도 코사인을 측정합니다.
 
-Now we need to index our 28 text chunks so that we can search over them
-at runtime. The most common way to do this is to embed the contents of
-each document split and insert these embeddings into a vector database
-(or vector store). When we want to search over our splits, we take a
-text search query, embed it, and perform some sort of “similarity”
-search to identify the stored splits with the most similar embeddings to
-our query embedding. The simplest similarity measure is cosine
-similarity — we measure the cosine of the angle between each pair of
-embeddings (which are high dimensional vectors).
+[Memory](../../docs/integrations/vectorstores/memory) 벡터스토어와
+[OpenAIEmbeddings](../../docs/integrations/text_embedding/openai) 모델을 
+사용하여 모든 문서 분할을 단일 명령으로 임베딩하고 저장할 수 있습니다.
 
-We can embed and store all of our document splits in a single command
-using the [Memory](../../docs/integrations/vectorstores/memory) vector
-store and
-[OpenAIEmbeddings](../../docs/integrations/text_embedding/openai) model.
 
 ```typescript
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
@@ -421,46 +362,41 @@ const vectorStore = await MemoryVectorStore.fromDocuments(
 );
 ```
 
-### Go deeper
+### 더 깊이 들어가기
 
-`Embeddings`: Wrapper around a text embedding model, used for converting
-text to embeddings. - [Docs](../../docs/concepts#embedding-models):
-Detailed documentation on how to use embeddings. -
-[Integrations](../../docs/integrations/text_embedding): 30+ integrations
-to choose from. -
-[Interface](https://v02.api.js.langchain.com/classes/langchain_core_embeddings.Embeddings.html):
-API reference for the base interface.
+`Embeddings`: 텍스트를 임베딩으로 변환하는 텍스트 임베딩 모델의 래퍼.
+- [문서](../../docs/concepts#embedding-models): 임베딩 사용 방법에 대한 자세한 문서
+- [통합](../../docs/integrations/text_embedding): 30개 이상의 통합 선택 가능
+- [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_embeddings.Embeddings.html):
+기본 인터페이스에 대한 API 레퍼런스
 
-`VectorStore`: Wrapper around a vector database, used for storing and
-querying embeddings. - [Docs](../../docs/concepts#vectorstores):
-Detailed documentation on how to use vector stores. -
-[Integrations](../../docs/integrations/vectorstores): 40+ integrations
-to choose from. -
-[Interface](https://v02.api.js.langchain.com/classes/langchain_core_vectorstores.VectorStore.html):
-API reference for the base interface.
+`VectorStore`: 임베딩을 저장하고 쿼리하는 데 사용되는 벡터 데이터베이스의 래퍼.
+- [문서](../../docs/concepts#vectorstores): 벡터스토어 사용 방법에 대한 자세한 문서
+- [통합](../../docs/integrations/vectorstores): 40개 이상의 통합 선택 가능
+- [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_vectorstores.VectorStore.html):
+기본 인터페이스에 대한 API 레퍼런스
 
-This completes the **Indexing** portion of the pipeline. At this point
-we have a query-able vector store containing the chunked contents of our
-blog post. Given a user question, we should ideally be able to return
-the snippets of the blog post that answer the question.
+이로써 **인덱싱** 파이프라인 부분이 완료되었습니다. 
+이 시점에서 우리는 블로그 게시물의 청크된 콘텐츠를 포함하는 쿼리 가능한 
+벡터스토어를 갖게 됩니다. 사용자 질문을 받으면 블로그 게시물의 
+질문에 대한 답변을 포함하는 스니펫을 반환할 수 있어야 합니다.
 
-## 4. Retrieval and Generation: Retrieve {#retrieval-and-generation-retrieve}
+## 4. 검색 및 생성: 검색 \{#retrieval-and-generation-retrieve}
 
-Now let’s write the actual application logic. We want to create a simple
-application that takes a user question, searches for documents relevant
-to that question, passes the retrieved documents and initial question to
-a model, and returns an answer.
+이제 실제 애플리케이션 로직을 작성해 봅시다. 사용자 질문을 받아 
+그 질문과 관련된 문서를 검색하고, 검색된 문서와 초기 질문을 
+모델에 전달하여 답변을 반환하는 간단한 애플리케이션을 만들고자 합니다.
 
-First we need to define our logic for searching over documents.
-LangChain defines a [Retriever](../../docs/concepts#retrievers)
-interface which wraps an index that can return relevant `Document`s
-given a string query.
+먼저 문서 검색 로직을 정의해야 합니다. LangChain은 문자열 쿼리를 받으면
+관련 `Document`를 반환할 수 있는 인덱스를 래핑하는
+[Retriever](../../docs/concepts#retrievers) 인터페이스를 정의합니다.
 
-The most common type of Retriever is the
-[VectorStoreRetriever](https://v02.api.js.langchain.com/classes/langchain_core_vectorstores.VectorStoreRetriever.html),
-which uses the similarity search capabilities of a vector store to
-facilitate retrieval. Any `VectorStore` can easily be turned into a
-`Retriever` with `VectorStore.asRetriever()`:
+가장 일반적인 타입의 리트리버는
+[VectorStoreRetriever](https://v02.api.js.langchain.com/classes/langchain_core_vectorstores.VectorStoreRetriever.html)입니다.
+이는 벡터스토어의 유사성 검색 기능을 사용하여 검색을 용이하게 합니다.
+어떤 `VectorStore`든지 `VectorStore.asRetriever()`를 사용하여 
+쉽게 `Retriever`로 변환할 수 있습니다:
+
 
 ```typescript
 const retriever = vectorStore.asRetriever({ k: 6, searchType: "similarity" });
@@ -488,29 +424,23 @@ console.log(retrievedDocs[0].pageContent);
 hard tasks into smaller and simpler steps. CoT transforms big tasks into multiple manageable tasks and shed lights into an interpretation of the model’s thinking process.Tree of Thoughts (Yao et al. 2023) extends CoT by exploring multiple reasoning possibilities at each step. It first decomposes the problem into multiple thought steps and generates multiple thoughts per step, creating a tree structure. The search process can be BFS (breadth-first search) or DFS (depth-first search) with each state evaluated by a classifier (via a prompt) or majority vote.Task decomposition can be done (1) by LLM with simple prompting like "Steps for XYZ.\n1.", "What are the subgoals for achieving XYZ?", (2) by using task-specific instructions; e.g. "Write a story outline." for writing a novel, or (3) with human inputs.Another quite distinct approach, LLM+P (Liu et al. 2023), involves relying on an external classical planner to do long-horizon planning. This approach utilizes the Planning Domain
 ```
 
-### Go deeper
+### 더 깊이 들어가기
 
-Vector stores are commonly used for retrieval, but there are other ways
-to do retrieval, too.
+벡터스토어는 주로 검색에 사용되지만, 검색을 하는 다른 방법들도 있습니다.
 
-`Retriever`: An object that returns `Document`s given a text query -
-[Docs](../../docs/concepts#retrievers): Further documentation on the
-interface and built-in retrieval techniques. Some of which include: -
-`MultiQueryRetriever` [generates variants of the input
-question](../../docs/how_to/multiple_queries/) to improve retrieval hit
-rate. - `MultiVectorRetriever` (diagram below) instead generates
-variants of the embeddings, also in order to improve retrieval hit
-rate. - Max marginal relevance selects for relevance and diversity among
-the retrieved documents to avoid passing in duplicate context. -
-Documents can be filtered during vector store retrieval using metadata
-filters. - Integrations: Integrations with retrieval services. -
-Interface: API reference for the base interface.
+`리트리버`: 텍스트 쿼리에 따라 `문서`를 반환하는 객체입니다 
+  - [리트리버 문서](../../docs/concepts#retrievers): 인터페이스와 기본 검색 기술에 대한 추가 문서. 일부 검색 기술에는 다음이 포함됩니다: 
+    - `MultiQueryRetriever`는 검색 적중률을 높이기 위해 [입력 질문의 변형을 생성합니다](../../docs/how_to/multiple_queries/). 
+    - `MultiVectorRetriever` (아래 다이어그램 참조)는 또한 검색 적중률을 높이기 위해 임베딩의 변형을 생성합니다. 
+  - 최대 한계 관련성은 중복된 컨텍스트 전달을 방지하기 위해 검색된 문서 중 관련성과 다양성을 선택합니다. 
+  - 문서는 벡터스토어 검색 중 메타데이터 필터를 사용하여 필터링될 수 있습니다.
+  - [통합](../../docs/integrations/retrievers): 검색 서비스와의 통합
+  - [인터페이스](https://v02.api.js.langchain.com/modules/langchain_core_retrievers.html): 기본 인터페이스에 대한 API 레퍼런스
 
-## 5. Retrieval and Generation: Generate {#retrieval-and-generation-generate}
+## 5. 검색과 생성: 생성하기 \{#retrieval-and-generation-generate}
 
-Let’s put it all together into a chain that takes a question, retrieves
-relevant documents, constructs a prompt, passes that to a model, and
-parses the output.
+질문을 받아서 관련 문서를 검색하고 프롬프트를 구성한 다음 모델에 전달하고 출력을 파싱하는 체인을 만들어 보겠습니다.
+
 
 ```mdx-code-block
 <ChatModelTabs customVarName="llm" />
@@ -580,11 +510,12 @@ Context: filler context
 Answer:
 ```
 
-We’ll use the [LCEL
-Runnable](../../docs/how_to/#langchain-expression-language-lcel)
-protocol to define the chain, allowing us to - pipe together components
-and functions in a transparent way - automatically trace our chain in
-LangSmith - get streaming, async, and batched calling out of the box
+우리는 체인을 정의하기 위해 [LCEL Runnable](../../docs/how_to/#langchain-expression-language-lcel) 
+프로토콜을 사용할 것입니다. 이를 통해 다음을 할 수 있습니다:
+- 컴포넌트와 기능을 투명하게 파이프로 연결
+- LangSmith에서 체인을 자동으로 추적
+- 스트리밍, 비동기 및 배치 호출을 기본으로 제공
+
 
 ```typescript
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -681,36 +612,34 @@ pose
 .
 ```
 
-Checkout the LangSmith trace
-[here](https://smith.langchain.com/public/6f89b333-de55-4ac2-9d93-ea32d41c9e71/r)
+[여기](https://smith.langchain.com/public/6f89b333-de55-4ac2-9d93-ea32d41c9e71/r)서 LangSmith을 확인해보세요.
 
-### Go deeper
 
-#### Choosing a model
+### 더 깊이 들어가기
 
-`ChatModel`: An LLM-backed chat model. Takes in a sequence of messages
-and returns a message. - [Docs](../../docs/concepts/#chat-models):
-Detailed documentation on -
-[Integrations](../../docs/integrations/chat/): 25+ integrations to
-choose from. -
-[Interface](https://v02.api.js.langchain.com/classes/langchain_core_language_models_chat_models.BaseChatModel.html):
-API reference for the base interface.
+#### 모델 선택
 
-`LLM`: A text-in-text-out LLM. Takes in a string and returns a string. -
-[Docs](../../docs/concepts#llms) -
-[Integrations](../../docs/integrations/llms/): 75+ integrations to
-choose from. -
-[Interface](https://v02.api.js.langchain.com/classes/langchain_core_language_models_llms.BaseLLM.html):
-API reference for the base interface.
+`채팅모델`: LLM 기반 채팅 모델입니다. 메시지 시퀀스를 받아 메시지를 반환합니다. 
+- [문서](../../docs/concepts/#chat-models)
+- [통합](../../docs/integrations/chat/): 25개 이상의 통합 선택 가능
+- [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_language_models_chat_models.BaseChatModel.html): 
+기본 인터페이스에 대한 API 레퍼런스
 
-See a guide on RAG with locally-running models
-[here](../../docs/tutorials/local_rag/).
+`LLM`: 텍스트 입력-텍스트 출력 LLM입니다. 문자열을 받아 문자열을 반환합니다.
+- [문서](../../docs/concepts#llms)
+- [통합](../../docs/integrations/llms/): 75개 이상의 통합 선택 가능
+- [인터페이스](https://v02.api.js.langchain.com/classes/langchain_core_language_models_llms.BaseLLM.html): 
+기본 인터페이스에 대한 API 레퍼런스
 
-#### Customizing the prompt
+로컬에서 실행되는 모델과 함께 RAG 가이드를 
+[여기](../../docs/tutorials/local_rag/)에서 확인하세요.
 
-As shown above, we can load prompts (e.g., [this RAG
-prompt](https://smith.langchain.com/hub/rlm/rag-prompt?organizationId=9213bdc8-a184-442b-901a-cd86ebf8ca6f))
-from the prompt hub. The prompt can also be easily customized:
+#### 프롬프트 커스터마이징
+
+위에서 보듯이, 우리는 프롬프트 허브에서 프롬프트를 로드할 수 있습니다. 
+(예: [RAG 프롬프트](https://smith.langchain.com/hub/rlm/rag-prompt?organizationId=9213bdc8-a184-442b-901a-cd86ebf8ca6f)).
+프롬프트는 쉽게 커스터마이징할 수도 있습니다:
+
 
 ```typescript
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -748,19 +677,19 @@ await ragChain.invoke({
 "Task decomposition is a technique used to break down complex tasks into smaller and simpler steps. I"... 336 more characters
 ```
 
-Checkout the LangSmith trace
-[here](https://smith.langchain.com/public/47ef2e53-acec-4b74-acdc-e0ea64088279/r)
+[여기](https://smith.langchain.com/public/6f89b333-de55-4ac2-9d93-ea32d41c9e71/r)서 LangSmith을 확인해보세요.
 
-## Next steps
+## 다음 단계
 
-That’s a lot of content we’ve covered in a short amount of time. There’s
-plenty of features, integrations, and extensions to explore in each of
-the above sections. Along from the Go deeper sources mentioned above,
-good next steps include:
+짧은 시간 안에 많은 내용을 다루었습니다. 위의 각 섹션에서 탐색할 수 있는 다양한 기능, 
+통합, 확장이 많이 있습니다. 위에서 언급한 `더 깊게 들어가기` 섹션의 소스 외에도 좋은 다음 단계는 다음과 같습니다:
 
-- [Return sources](../../docs/how_to/qa_sources/): Learn how to return
-  source documents
-- [Streaming](../../docs/how_to/qa_streaming/): Learn how to stream
-  outputs and intermediate steps
-- [Add chat history](../../docs/how_to/qa_chat_history_how_to/): Learn
-  how to add chat history to your app
+- [소스 반환](../../docs/how_to/qa_sources/): 소스 문서를 반환하는 방법 배우기
+- [스트리밍](../../docs/how_to/qa_streaming/): 출력 및 중간 단계를 스트리밍하는 방법 배우기
+- [채팅 기록 추가](../../docs/how_to/qa_chat_history_how_to/): 애플리케이션에 채팅 기록을 
+  추가하는 방법 배우기
+
+
+
+
+
