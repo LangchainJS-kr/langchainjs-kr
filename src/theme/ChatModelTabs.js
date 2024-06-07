@@ -139,7 +139,7 @@ export default function ChatModelTabs(props) {
       <Tabs groupId="modelTabs">
         {displayedTabs.map((tab) => (
           <TabItem value={tab.value} label={tab.label} key={tab.value}>
-            <h4>디펜던시 설치</h4>
+            <h4>의존성 추가</h4>
             <InstallationInfo>
               {[tab.dependencies, additionalDependencies].join(" ")}
             </InstallationInfo>
