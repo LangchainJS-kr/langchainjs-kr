@@ -94,4 +94,4 @@
 ## 익스텐션
 
 - [MarkdownLint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
-- [MDX](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx)
+- [MDX](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-md)
