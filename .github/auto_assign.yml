@@ -1,0 +1,17 @@
+# PR에 리뷰어를 추가하기 위해서는 true로 설정
+addReviewers: true
+
+# PR에 Assignee를 추가하기 위해서는 true로 설정
+# author로 적으면 작성자가 Assignee로 설정
+addAssignees: author
+
+# PR에 추가할 리뷰어들 목록(GitHub 유저 이름)
+reviewers:
+  - froggy1014
+  # - seochan99
+  - KoJaem
+  # - henrynoowah
+
+# 풀 리퀘스트에 추가된 리뷰어 수
+# 모든 리뷰어를 추가하려면 0으로 설정합니다(기본값: 0).
+numberOfReviewers: 0
