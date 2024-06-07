@@ -33,14 +33,6 @@ figure {
   margin: 0 !important;
 }
 
-.theme-doc-sidebar-container {
-  max-width: 250px;
-}
-
-.menu {
-  max-width: 250px;
-}
-
 .footer__links {
   margin-top: 1rem;
   margin-bottom: 3rem;
