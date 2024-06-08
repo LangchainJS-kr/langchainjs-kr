@@ -1,5 +1,18 @@
 # Langchain js for Korean 번역 레포지토리
 
+## [번역 초안을 위한 GPTs를 한번 사용해보세요 !](https://chatgpt.com/g/g-HKKcizSKs-draft-translation-for-langchain-korean)
+
+- 저희가 사용하기로한 용어집을 알고 있기 때문에 해당 예약어는 번역을 아래와 같이 해줄거예요.
+- 피드백은 언제든지 환영입니다 ㅎㅎ.
+
+### example  
+
+➡️ For more information about how to think about these components, see our [conceptual guide](../../docs/concepts/#agents).
+
+❌  이 구성 요소들에 대해 더 자세히 알고 싶으시면, [개념 가이드](../../docs/concepts/#agents)를 참조하십시오.
+
+✅ 이 컴포넌트들에 대해 더 자세히 알고 싶다면, [개념 가이드](../../docs/concepts/#agents)를 참고하세요.
+
 ## 번역 스타일 가이드
 
 1. 일반 규칙
