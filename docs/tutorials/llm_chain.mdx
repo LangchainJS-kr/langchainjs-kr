@@ -1,34 +1,33 @@
 ---
 sidebar_position: 0
-title: 간단한 LLM 애플리케이션 만들기
+title: LCEL로 간단한 LLM 애플리케이션 만들기
 sidebar_class_name: hidden
 pagination_prev: null
 pagination_next: null
 ---
 
-In this quickstart we’ll show you how to build a simple LLM application.
-This application will translate text from English into another language.
-This is a relatively simple LLM application - it’s just a single LLM
-call plus some prompting. Still, this is a great way to get started with
-LangChain - a lot of features can be built with just some prompting and
-an LLM call!
+In this quickstart we’ll show you how to build a simple LLM application
+with LangChain. This application will translate text from English into
+another language. This is a relatively simple LLM application - it’s
+just a single LLM call plus some prompting. Still, this is a great way
+to get started with LangChain - a lot of features can be built with just
+some prompting and an LLM call!
 
-## Concepts
-
-Concepts we will cover are:
+After reading this tutorial, you’ll have a high level overview of:
 
 - Using [language models](../../docs/concepts/#chat-models)
 
 - Using [PromptTemplates](../../docs/concepts/#prompt-templates) and
   [OutputParsers](../../docs/concepts/#output-parsers)
 
-- [Chaining](../../docs/concepts/#langchain-expression-language) a
-  PromptTemplate + LLM + OutputParser using LangChain
+- Using [LangChain Expression Language
+  (LCEL)](../../docs/concepts/#langchain-expression-language) to chain
+  components together
 
 - Debugging and tracing your application using
   [LangSmith](../../docs/concepts/#langsmith)
 
-That’s a fair amount to cover! Let’s dive in.
+Let’s dive in!
 
 ## Setup
 
@@ -41,7 +40,9 @@ import Npm2Yarn from '@theme/Npm2Yarn';
 import TabItem from '@theme/TabItem';
 import CodeBlock from "@theme/CodeBlock";
 
-<Npm2Yarn>langchain</Npm2Yarn>
+<Npm2Yarn>
+  langchain
+</Npm2Yarn>
 ```
 
 For more details, see our [Installation
@@ -62,11 +63,6 @@ variables to start logging traces:
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="..."
 ```
-
-## Detailed walkthrough
-
-In this guide we will build an application to translate user input from
-one language to another.
 
 ## Using Language Models
 
@@ -153,13 +149,15 @@ await parser.invoke(result);
 "ciao!"
 ```
 
-More commonly, we can “chain” the model with this output parser. This
-means this output parser will get called every time in this chain. This
-chain takes on the input type of the language model (string or list of
+## Chaining together components with LCEL
+
+We can also “chain” the model to the output parser. This means this
+output parser will get called with the output from the model. This chain
+takes on the input type of the language model (string or list of
 message) and returns the output type of the output parser (string).
 
-We can easily create the chain using the `.pipe` method. The `.pipe`
-method is used in LangChain to combine two elements together.
+We can create the chain using the `.pipe()` method. The `.pipe()` method
+is used in LangChain to combine two elements together.
 
 ```typescript
 const chain = model.pipe(parser);
@@ -172,6 +170,11 @@ await chain.invoke(messages);
 ```text
 "Ciao!"
 ```
+
+This is a simple example of using [LangChain Expression Language
+(LCEL)](../../docs/concepts/#langchain-expression-language) to chain
+together LangChain modules. There are several benefits to this approach,
+including optimized streaming and tracing support.
 
 If we now look at LangSmith, we can see that the chain has two steps:
 first the language model is called, then the result of that is passed to
@@ -209,7 +212,7 @@ const systemTemplate = "Translate the following into {language}:";
 ```
 
 Next, we can create the PromptTemplate. This will be a combination of
-the `systemTemplate` as well as a simpler template for where the put the
+the `systemTemplate` as well as a simpler template for where to put the
 text
 
 ```typescript
@@ -340,19 +343,27 @@ trace](https://smith.langchain.com/public/cef6edcd-39ed-4c1e-86f7-491a1b611aeb/r
 
 ## Conclusion
 
-That’s it! In this tutorial we’ve walked through creating our first
-simple LLM application. We’ve learned how to work with language models,
-how to parse their outputs, how to create a prompt template, and how to
-get great observability into chains you create with LangSmith.
+That’s it! In this tutorial you’ve learned how to create your first
+simple LLM application. You’ve learned how to work with language models,
+how to parse their outputs, how to create a prompt template, chaining
+them together with LCEL, and how to get great observability into chains
+you create with LangSmith.
 
 This just scratches the surface of what you will want to learn to become
 a proficient AI Engineer. Luckily - we’ve got a lot of other resources!
 
-For more in-depth tutorials, check out out
-[Tutorials](../../docs/tutorials) section.
+For further reading on the core concepts of LangChain, we’ve got
+detailed [Conceptual Guides](../../docs/concepts).
 
-If you have specific questions on how to accomplish particular tasks,
-see our [How-To Guides](../../docs/how_to) section.
+If you have more specific questions on these concepts, check out the
+following sections of the how-to guides:
 
-For reading up on the core concepts of LangChain, we’ve got detailed
-[Conceptual Guides](../../docs/concepts)
+- [LangChain Expression Language
+  (LCEL)](../../docs/how_to/#langchain-expression-language)
+- [Prompt templates](../../docs/how_to/#prompt-templates)
+- [Chat models](../../docs/how_to/#chat-models)
+- [Output parsers](../../docs/how_to/#output-parsers)
+
+And the LangSmith docs:
+
+- [LangSmith](https://docs.smith.langchain.com)
