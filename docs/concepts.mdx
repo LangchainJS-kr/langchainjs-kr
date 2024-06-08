@@ -53,7 +53,7 @@ LangGraph는 일반적인 유형의 에이전트를 만들기 위한 고급 인�
 
 LLM 애플리케이션을 디버그, 테스트, 평가 및 모니터링할 수 있는 개발자 플랫폼입니다.
 
-## Installation
+## 설치
 
 고수준의 추상화를 사용하고 싶다면 `langchain` 패키지를 설치해야 합니다.
 
@@ -114,13 +114,13 @@ LCEL을 사용하면 **모든** 단계에 대해서 최대한의 관찰, 디버�
 | 컴포넌트 | 입력 타입                                      | 출력 타입        |
 | -------- | ---------------------------------------------- | ---------------- |
 | 프롬프트 | 객체                                           | 프롬프트 값      |
-| 채팅모델 | 단일 문자열, 채팅 메시지 목록 또는 프롬프트 값 | 채팅 메세지      |
+| 채팅 모델 | 단일 문자열, 채팅 메시지 목록 또는 프롬프트 값 | 채팅 메세지      |
 | LLM      | 단일 문자열, 채팅 메시지 목록 또는 프롬프트 값 | 문자열           |
-| 출력파서 | LLM 또는 채팅모델의 출력                       | 파서에 따라 다름 |
+| 출력파서 | LLM 또는 채팅 모델의 출력                       | 파서에 따라 다름 |
 | 검색기   | 단일 문자열                                    | 문서 목록        |
 | 도구     | 도구에 따라 단일 문자열 또는 객체              | 도구에 따라 다름 |
 
-## 컴포넌트
+## 컴포넌트 ( Components ) 
 
 LangChain은 LLM을 사용하여 빌드하는 데 유용한 다양한 컴포넌트에 대해 표준화되고 확장 가능한 인터페이스 및 외부 통합 기능을 제공합니다.
 일부 컴포넌트는 LangChain에서 구현하고, 일부 컴포넌트는 써드파티 통합을 활용하며, 나머지는 혼용됩니다.
@@ -128,17 +128,17 @@ LangChain은 LLM을 사용하여 빌드하는 데 유용한 다양한 컴포넌�
 ### LLMs
 
 LLM은 문자열을 입력으로 받아 문자열을 반환하는 언어 모델입니다.
-이들은 전통적으로 구형 모델이며(신형 모델은 일반적으로 `채팅모델`입니다, 아래 참조).
+이들은 전통적으로 구형 모델이며(신형 모델은 일반적으로 `채팅 모델`입니다, 아래 참조).
 
 기본 모델은 입력 문자열과 출력 문자열을 처리하지만, LangChain 래퍼는 이 모델이 메시지를 입력으로 받을 수 있도록 합니다.
-이를 통해 이 모델들은 채팅모델들과 상호 교환이 가능합니다.
+이를 통해 이 모델들은 채팅 모델들과 상호 교환이 가능합니다.
 메시지가 입력으로 전달될 때, 기본 모델에 전달되기 전에 내부적으로 문자열로 포매팅됩니다.
 
 LangChain은 자체 LLM을 제공하지 않으며, 써드파티 통합에 의존합니다.
 
-### 채팅 모델
+### 채팅 모델 ( Chat models )
 
-채팅 모델은 메시지의 시퀀스를 입력으로 사용하고 채팅 메시지를 출력으로 반환하는 언어 모델입니다 (단순 텍스트를 사용하는 것과는 다릅니다).
+일련의 메시지를 입력으로 사용하고 채팅 메시지를 결과값으로 반환하는 언어 모델입니다.(단순 텍스트를 사용하는 것과는 다릅니다)
 이들은 대체로 신형 모델이며(구형 모델은 일반적으로 `LLMs`입니다, 위 참조).
 채팅 모델은 대화 메시지에 고유한 역할을 할당하는 것을 지원하여, AI, 사용자 및 시스템 메시지와 같은 지시사항의 메시지를 구분하는 데 도움이 됩니다.
 
@@ -146,15 +146,15 @@ LangChain은 자체 LLM을 제공하지 않으며, 써드파티 통합에 의존
 이를 통해 이 모델들은 LLM과 상호 교환이 가능하며, 사용이 더 간단해집니다.
 문자열이 입력으로 전달되면, 기본 모델에 전달되기 전에 내부적으로 HumanMessage로 변환됩니다.
 
-LangChain은 자체 채팅모델들을 제공하지 않으며, 써드파티 통합에 의존합니다.
+LangChain은 자체 채팅 모델들을 제공하지 않으며, 써드파티 통합에 의존합니다.
 
-우리는 채팅모델들을 구성할 때 일부 표준화된 매개변수를 사용합니다:
+우리는 채팅 모델들을 구성할 때 일부 표준화된 매개변수를 사용합니다:
 
 - `model`: 모델의 이름
 
-채팅모델은 또한 해당 통합에 특화된 다른 매개변수도 받기도 합니다.
+채팅 모델은 또한 해당 통합에 특화된 다른 매개변수도 받기도 합니다.
 
-### 함수/도구 호출
+### 함수/도구 호출 ( Function/Tool Calling )
 
 :::info
 우리는 도구 호출이라는 용어를 함수 호출과 교차하여 사용합니다. 함수 호출은 때때로 단일 함수의 호출을 의미하지만,
@@ -185,7 +185,7 @@ LangChain은 [내장 도구](/docs/integrations/tools/) 세트를 포함하고 �
 - [LLM으로부터 정형 데이터를 반환하는 법](/docs/how_to/structured_output/)
 - [모델을 사용해서 도구를 호출하는 법](/docs/how_to/tool_calling/)
 
-### 메시지 타입
+### 메시지 타입 ( Message types )
 
 일부 언어 모델은 메시지 배열을 입력으로 받아 메시지를 반환합니다.
 몇 가지 다른 타입의 메시지가 있습니다.
@@ -234,19 +234,19 @@ LangChain은 다양한 역할에 대해 다른 메시지 클래스를 가지고 
 
 이것은 도구 호출의 결과를 나타냅니다. 이는 OpenAI의 `function` 및 `tool` 메시지 타입과 일치하기 위해 FunctionMessage와 구별됩니다. `role`과 `content` 외에도, 이 메시지에는 이 결과를 생성하기 위해 호출된 도구 호출의 ID를 전달하는 `tool_call_id` 매개변수가 있습니다.
 
-### PromptTemplate
+### 프롬프트 템플릿 ( Prompt templates )
 
 프롬프트 템플릿은 사용자 입력과 매개변수를 언어 모델에 대한 지시로 변환하는 데 도움이 됩니다.
 이를 통해 모델이 컨텍스트를 이해하고 관련성 있고 일관된 언어 기반 출력을 생성할 수 있도록 도와줍니다.
 
 프롬프트 템플릿은 객체를 입력으로 받는데, 각 키는 프롬프트 템플릿에서 입력할 변수를 나타냅니다.
 
-프롬프트 템플릿은 PromptValue를 출력합니다. 이 PromptValue는 LLM 또는 채팅모델에 전달될 수 있으며, 문자열이나 메시지 배열로 변환될 수도 있습니다.
+프롬프트 템플릿은 PromptValue를 출력합니다. 이 PromptValue는 LLM 또는 채팅 모델에 전달될 수 있으며, 문자열이나 메시지 배열로 변환될 수도 있습니다.
 이 PromptValue가 존재하는 이유는 문자열과 메시지 간에 쉽게 전환할 수 있도록 하기 위함입니다.
 
 프롬프트 템플릿에는 몇 가지 다른 타입이 있습니다.
 
-#### String PromptTemplate
+#### 문자열 프롬프트 템플릿 ( String PromptTemplate )
 
 이 프롬프트 템플릿은 단일 문자열을 포매팅하는 데 사용되며, 일반적으로 더 간단한 입력에 사용됩니다.
 예를 들어, 프롬프트 템플릿을 구성하고 사용하는 일반적인 방법은 다음과 같습니다:
@@ -259,7 +259,7 @@ const promptTemplate = PromptTemplate.fromTemplate("{topic}에 관련된 농담�
 await promptTemplate.invoke({ topic: "고양이" });
 ```
 
-#### ChatPromptTemplate
+#### 채팅 프롬프트 텔플릿 ( ChatPromptTemplate )
 
 이 프롬프트 템플릿은 메시지 배열을 포매팅하는 데 사용됩니다. 이러한 "템플릿"은 자체적으로 템플릿 배열로 구성됩니다.
 예를 들어, ChatPromptTemplate을 구성하고 사용하는 일반적인 방법은 다음과 같습니다:
@@ -279,7 +279,7 @@ await promptTemplate.invoke({ topic: "고양이" });
 첫 번째는 포매팅할 변수가 없는 시스템 메시지입니다.
 두 번째는 HumanMessage이며, 사용자가 전달하는 `topic` 변수로 포매팅됩니다.
 
-#### MessagesPlaceholder
+#### 메세지 플레이스홀더 ( MessagesPlaceholder )
 
 이 프롬프트 템플릿은 특정 위치에 메시지 배열을 추가하는 역할을 합니다.
 위의 ChatPromptTemplate에서 우리는 각각 문자열인 두 개의 메시지를 포매팅하는 방법을 보았습니다.
@@ -314,14 +314,14 @@ const promptTemplate = ChatPromptTemplate.fromMessages([
 ]);
 ```
 
-### Example Selectors
+### 예제 선택기 ( Example Selectors )
 
 더 나은 성능을 달성하기 위한 일반적인 프롬프트 기법 중 하나는 예제를 프롬프트의 일부로 포함하는 것입니다.
 점점 더 많은 모델이 함수나 도구 호출을 자동으로 처리할 수 있게 지원하고 있습니다.
 때때로 이러한 예제는 프롬프트에 하드코딩되지만, 더 복잡한 경우에서는 동적으로 선택하는 것이 좋을 수 있습니다.
-Example Selectors는 예제를 선택한 다음 프롬프트에 포매팅하는 역할을 하는 클래스입니다.
+예제 선택기(Example Selectors)는 예제를 선택한 다음 프롬프트에 포매팅하는 역할을 하는 클래스입니다.
 
-### Output parsers
+### 출력 파서 ( Output parsers )
 
 :::note
 
@@ -348,19 +348,19 @@ LLM을 사용하여 구조화된 데이터를 생성하거나, 모델 및 LLM의
 
 LangChain에는 다양한 타입의 출력 파서가 있습니다. 다음은 LangChain이 지원하는 출력 파서 목록입니다. 아래 표에는 다양한 정보가 포함되어 있습니다:
 
-**Name**: 출력 파서의 이름
+**이름**: 출력 파서의 이름
 
-**Supports Streaming**: 출력 파서가 스트리밍을 지원하는지 여부
+**스트리밍 지원**: 출력 파서가 스트리밍을 지원하는지 여부
 
-**Input Type**: 예상 입력 타입. 대부분의 출력 파서는 문자열과 메시지 모두에서 작동하지만, 일부(예: OpenAI Functions)는 특정 인수가 포함된 메시지가 필요합니다.
+**입력 타입**: 예상 입력 타입. 대부분의 출력 파서는 문자열과 메시지 모두에서 작동하지만, 일부(예: OpenAI Functions)는 특정 인수가 포함된 메시지가 필요합니다.
 
-**Output Type**: 파서가 반환하는 객체의 출력 유형
+**출력 타입**: 파서가 반환하는 객체의 출력 유형
 
-**Description**: 이 출력 파서에 대한 설명 및 사용 시기
+**설명**: 이 출력 파서에 대한 설명 및 사용 시기
 
-| Name                                                                                                              | Supports Streaming | Input Type                | Output Type                       | Description                                                                                                                      |
+| 이름                        | 스트리밍 지원 | 입력 타입         | 출력 타입                   | 설명                                                                                                                      |
 | ----------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| [JSON](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `Promise<T>`                      | 지정된 JSON 객체를 반환합니다. Zod 스키마를 지정할 수 있으며, 해당 모델에 대한 JSON을 반환합니다.                                |
+| [JSON](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `설명<T>`                      | 지정된 JSON 객체를 반환합니다. Zod 스키마를 지정할 수 있으며, 해당 모델에 대한 JSON을 반환합니다.                                |
 | [XML](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.XMLOutputParser.html)                | ✅                 | `string` \| `BaseMessage` | `Promise<XMLResult>`              | 태그 객체를 반환합니다. XML 출력이 필요할 때 사용하십시오. Anthropic와 같이 XML 작성을 잘하는 모델과 함께 사용하십시오.          |
 | [CSV](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.CommaSeparatedListOutputParser.html) | ✅                 | `string` \| `BaseMessage` | `Array[string]`                   | 쉼표로 구분된 값의 배열을 반환합니다.                                                                                            |
 | [Structured](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.StructuredOutputParser.html)  |                    | `string` \| `BaseMessage` | `Promise<TypeOf<T>>`              | LLM 응답에서 구조화된 JSON을 파싱합니다.                                                                                         |
@@ -369,28 +369,28 @@ LangChain에는 다양한 타입의 출력 파서가 있습니다. 다음은 Lan
 | [Datetime](https://v02.api.js.langchain.com/classes/langchain_output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | 응답을 `Date` 형식으로 파싱합니다.                                                                                               |
 | [Regex](https://v02.api.js.langchain.com/classes/langchain_output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | 정규식 패턴을 사용하여 주어진 텍스트를 파싱하고, 파싱된 출력이 포함된 객체를 반환합니다.                                         |
 
-### Chat History
+### 채팅 이력 ( Chat History ) 
 
 대부분의 LLM 애플리케이션에는 대화형 인터페이스가 있습니다.
 대화의 필수 컴포넌트는 대화에서 이전에 도입된 정보를 참조할 수 있는 것 입니다.
 최소한, 대화 시스템은 과거 메시지의 일부를 직접 액세스할 수 있어야 합니다.
 
-`ChatHistory` 개념은 임의의 체인을 래핑하는 데 사용할 수 있는 LangChain의 클래스에 해당합니다.
-이 `ChatHistory`는 기본 체인의 입력과 출력을 추적하고, 이를 메시지 데이터베이스에 메시지로 추가합니다.
+`채팅 이력` 개념은 임의의 체인을 래핑하는 데 사용할 수 있는 LangChain의 클래스에 해당합니다.
+이 `채팅 이력`은 기본 체인의 입력과 출력을 추적하고, 이를 메시지 데이터베이스에 메시지로 추가합니다.
 향후 상호 작용 시 이러한 메시지를 로드하여 입력의 일부로 체인에 전달합니다.
 
-### Document
+### 문서 ( Document )
 
-LangChain의 Document 객체는 일부 데이터에 대한 정보를 포함합니다. 여기엔 두 가지 속성이 있습니다:
+LangChain의 문서 객체는 일부 데이터에 대한 정보를 포함합니다. 여기엔 두 가지 속성이 있습니다:
 
 - `pageContent: string`: 이 문서의 콘텐츠. 현재는 문자열만 포함됩니다.
 - `metadata: Record<string, any>`: 이 문서와 관련된 임의의 메타데이터로 문서 ID, 파일 이름 등을 추적할 수 있습니다.
 
-### Document loaders
+### 문서 로더 ( Document loaders ) 
 
-이 클래스들은 Document 객체를 로드합니다. LangChain은 Slack, Notion, Google Drive 등 다양한 데이터 소스와의 수백 가지 통합을 통해 데이터를 로드할 수 있습니다.
+이 클래스들은 문서 객체를 로드합니다. LangChain은 Slack, Notion, Google Drive 등 다양한 데이터 소스와의 수백 가지 통합을 통해 데이터를 로드할 수 있습니다.
 
-각 DocumentLoader는 고유한 특정 매개변수를 가지고 있지만, 모두 동일한 방식으로 `.load` 메서드를 사용하여 호출할 수 있습니다.
+각 문서 로더는 고유한 특정 매개변수를 가지고 있지만, 모두 동일한 방식으로 `.load` 메서드를 사용하여 호출할 수 있습니다.
 유즈케이스는 다음과 같습니다:
 
 ```typescript
@@ -402,7 +402,7 @@ const loader = new CSVLoader();
 const docs = await loader.load();
 ```
 
-### Text splitters
+### 텍스트 스플리터 ( text splitter )
 
 문서를 로드한 후에는 본인의 애플리케이션에 더 적합하도록 변환하고 싶을 것입니다. 가장 간단한 예로, 긴 문서를 모델의 컨텍스트 창에 맞출 수 있는 더 작은 청크로 분할하고 싶을 수 있습니다. LangChain에는 문서를 분할, 결합, 필터링 및 기타 방법으로 조작할 수 있는 여러 내장 문서 변환기가 있습니다.
 
@@ -423,7 +423,7 @@ const docs = await loader.load();
 1. 텍스트가 분할되는 방식
 2. 청크 크기를 측정하는 방식
 
-### Embedding models
+### 임베딩 모델 ( Embedding models )
 
 임베딩 클래스는 텍스트 임베딩 모델과 인터페이스하기 위해 설계된 클래스입니다. 많은 임베딩 모델 프로바이더(OpenAI, Cohere, Hugging Face 등)가 있으며, 이 클래스는 이들 모두에 대해 표준 인터페이스를 제공하도록 설계되었습니다.
 
@@ -431,7 +431,7 @@ const docs = await loader.load();
 
 LangChain의 기본 임베딩 클래스는 문서 임베딩과 쿼리 임베딩을 위한 두 가지 메서드를 제공합니다. 전자는 여러 텍스트를 입력으로 받고, 후자는 단일 텍스트를 입력으로 받습니다. 이를 두 개의 별도 메서드로 제공하는 이유는 일부 임베딩 프로바이더가 문서(검색 대상)와 쿼리(검색 쿼리 자체)에 대해 다른 임베딩 메서드를 가지고 있기 때문입니다.
 
-### Vectorstores
+### 벡터스토어 ( VectorStore )
 
 비구조화된 데이터를 저장하고 검색하는 가장 일반적인 방법 중 하나는 데이터를 임베딩하고 결과 임베딩 벡터를 저장한 다음,
 쿼리 시 비구조화된 쿼리를 임베딩하여 임베딩된 쿼리와 '가장 유사한' 임베딩 벡터를 검색하는 것입니다.
@@ -444,16 +444,16 @@ const vectorstore = new MyVectorStore();
 const retriever = vectorstore.asRetriever();
 ```
 
-### Retrievers
+### 검색기 ( Retriever )
 
-`Retriever`는 비구조화된 쿼리를 주면 관련 문서를 반환하는 인터페이스입니다.
+`검색기`는 비구조화된 쿼리를 주면 관련 문서를 반환하는 인터페이스입니다.
 벡터 스토어보다 더 일반적입니다.
-retriever는 문서를 저장할 필요는 없고, 단지 반환(또는 검색)만 하면 됩니다.
-retriever는 벡터 스토어에서 생성할 수 있지만, [Exa 검색](/docs/integrations/retrievers/exa/) (웹 검색) 및 [Amazon Kendra](/docs/integrations/retrievers/kendra-retriever/)를 포함할 만큼 광범위합니다.
+검색기는 문서를 저장할 필요는 없고, 단지 반환(또는 검색)만 하면 됩니다.
+검색기는 벡터 스토어에서 생성할 수 있지만, [Exa 검색](/docs/integrations/retrievers/exa/) (웹 검색) 및 [Amazon Kendra](/docs/integrations/retrievers/kendra-retriever/)를 포함할 만큼 광범위합니다.
 
-retriever는 문자열 쿼리를 입력으로 받아 `Document` 배열을 출력으로 반환합니다.
+검색기는 문자열 쿼리를 입력으로 받아 `Document` 배열을 출력으로 반환합니다.
 
-### Tools
+### 도구 ( Tools )
 
 도구는 에이전트, 체인 또는 LLM이 세상과 상호작용하는 데 사용할 수 있는 인터페이스입니다.
 이들은 몇 가지를 결합합니다:
@@ -471,22 +471,22 @@ retriever는 문자열 쿼리를 입력으로 받아 `Document` 배열을 출력
 
 중요한 점은, 이름, 설명, 그리고 JSON 스키마(사용되는 경우) 모두가 프롬프트에서 사용된다는 것입니다. 따라서, 이들이 명확하고 도구가 어떻게 사용되어야 하는지를 정확히 설명하는 것이 매우 중요합니다. LLM이 도구 사용 방법을 이해하지 못하는 경우 기본 이름, 설명 또는 JSON 스키마를 변경해야 할 수도 있습니다.
 
-### Toolkits
+### 툴킷 ( Toolkits )
 
-Toolkits는 특정 작업을 위해 함께 사용하도록 설계된 도구 모음입니다. 이들은 편리한 로딩 방법을 제공합니다.
+툴킷은 특정 작업을 위해 함께 사용하도록 설계된 도구 모음입니다. 이들은 편리한 로딩 방법을 제공합니다.
 
-모든 toolkits는 도구 배열을 반환하는 `getTools` 메서드를 노출합니다.
+모든 툴킷은 도구 배열을 반환하는 `getTools` 메서드를 노출합니다.
 따라서 다음과 같이 사용할 수 있습니다:
 
 ```typescript
-// Toolkit을 초기화 합니다.
+// 툴킷을 초기화 합니다.
 const toolkit = new ExampleTookit(...)
 
-// tools 리스트
+// 도구 리스트
 const tools = toolkit.getTools()
 ```
 
-### Agents
+### 에이전트 ( Agent )
 
 언어 모델 자체로는 액션을 취할 수 없습니다. 단지 텍스트를 출력할 뿐이죠.
 LangChain의 주 유즈케이스는 **에이전트**를 만드는 것입니다.
@@ -504,13 +504,13 @@ AgentExecutor는 본질적으로 에이전트의 런타임이었습니다.
 아직 AgentExecutor를 사용 중이라면 걱정하지 마세요. [AgentExecutor 사용 방법](/docs/how_to/agent_executor)에 대한 가이드를 여전히 제공하고 있습니다.
 그러나 [LangGraph](https://github.com/langchain-ai/langgraphjs)로 전환하는 것을 권장합니다.
 
-### Callbacks
+### 콜백 ( Callback )
 
 LangChain은 LLM 애플리케이션의 다양한 단계에 연결할 수 있는 콜백 시스템을 제공합니다. 이는 로깅, 모니터링, 스트리밍 및 기타 작업에 유용합니다.
 
 API 전반에서 사용할 수 있는 `callbacks` 인수를 사용하여 이러한 이벤트를 구독할 수 있습니다. 이 인수는 하나 이상의 메서드를 구현하는 핸들러 객체 리스트로, 아래에 자세히 설명되어 있습니다.
 
-#### Callback handlers
+#### 콜백 핸들러 ( Callback handlers )
 
 `CallbackHandlers`는 구독할 수 있는 각 이벤트에 대한 메서드를 갖는 [`CallbackHandler`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html) 인터페이스를 구현하는 객체입니다.
 이벤트가 발생하면 `CallbackManager`가 각 핸들러의 적절한 메서드를 호출합니다.
@@ -580,18 +580,18 @@ interface CallbackHandlerMethods {
 }
 ```
 
-#### Passing callbacks
+#### 콜백 전달
 
-`callbacks` 속성은 API 전반의 대부분의 객체(모델, 도구, 에이전트 등)에서 두 가지 방식으로 사용할 수 있습니다:
+`콜백` 속성은 API 전반의 대부분의 객체(모델, 도구, 에이전트 등)에서 두 가지 방식으로 사용할 수 있습니다:
 
-- **Constructor callbacks**: 생성자에서 정의되며, 예를 들어 `new ChatAnthropic({ callbacks: [handler], tags: ["a-tag"] })`와 같이 사용됩니다. 이 경우, 해당 객체에서 수행되는 모든 호출에 대해 콜백이 사용되며, 해당 객체에만 범위가 한정됩니다.
+- **생성자 콜백**: 생성자에서 정의되며, 예를 들어 `new ChatAnthropic({ callbacks: [handler], tags: ["a-tag"] })`와 같이 사용됩니다. 이 경우, 해당 객체에서 수행되는 모든 호출에 대해 콜백이 사용되며, 해당 객체에만 범위가 한정됩니다.
   예를 들어, 생성자 콜백으로 채팅 모델을 초기화한 다음 체인 내에서 사용할 경우, 콜백은 해당 모델에 대한 호출에만 호출됩니다.
-- **Request callbacks**: 요청을 호출하는 데 사용되는 `invoke` 메서드에 전달됩니다. 이 경우, 콜백은 해당 특정 요청과 그 요청에 포함된 모든 하위 요청(예: 모델 호출을 트리거하는 시퀀스 호출, `invoke()` 메서드에 전달된 동일한 핸들러 사용)에 대해서만 사용됩니다.
+- **요청 콜백**: 요청을 호출하는 데 사용되는 `invoke` 메서드에 전달됩니다. 이 경우, 콜백은 해당 특정 요청과 그 요청에 포함된 모든 하위 요청(예: 모델 호출을 트리거하는 시퀀스 호출, `invoke()` 메서드에 전달된 동일한 핸들러 사용)에 대해서만 사용됩니다.
   `invoke()` 메서드에서는 콜백이 config 매개변수를 통해 전달됩니다.
 
-## Techniques
+## 기술
 
-### Function/tool calling
+### 함수/도구 호출 ( Function/Tool Calling )
 
 :::info
 우리는 도구 호출이라는 용어를 함수 호출과 교차하여 사용합니다. 함수 호출은 때때로 단일 함수의 호출을 의미하지만, 우리는 모든 모델이 각 메시지에서 여러 도구 또는 함수 호출을 반환할 수 있는 것처럼 다룹니다.
@@ -623,21 +623,21 @@ LangChain은 다양한 모델에서 일관된 도구 호출을 위한 표준 인
 - [LLM에서 구조화된 데이터를 반환하는 방법](/docs/how_to/structured_output/)
 - [모델을 사용하여 도구를 호출하는 방법](/docs/how_to/tool_calling/)
 
-### Retrieval
+### 검색 ( Retrieval )
 
 LangChain은 여러 고급 검색 유형을 제공합니다. 아래는 전체 목록과 함께 다음과 같은 정보가 포함되어 있습니다:
 
-**Name**: 검색 알고리즘의 이름.
+**이름**: 검색 알고리즘 이름.
 
-**Index Type**: 이 알고리즘이 의존하는 인덱스 유형(있는 경우).
+**인덱스 타입**: 어떤 인덱스 유형(있는 경우)에 의존하는지.
 
-**Uses an LLM**: 이 검색 방법이 LLM을 사용하는지 여부.
+**LLM 사용 여부**: 검색에서 LLM 사용 여부.
 
-**When to Use**: 이 검색 방법을 고려해야 하는 시기에 대한 설명.
+**사용 시기**: 검색을 고려해야 할 때에 대한 설명.
 
-**Description**: 이 검색 알고리즘이 수행하는 작업에 대한 설명.
+**설명**: 검색 알고리즘이 수행하는 작업 설명.
 
-| Name                                                                 | Index Type                   | Uses an LLM               | When to Use                                                                                                    | Description                                                                                                                                                                                                |
+| 이름                                                                 | 인덱스 타입                   | LLM 사용 여부               | 사용 시기                                                                                                    | 설명                                                                                                                                                                                                |
 | -------------------------------------------------------------------- | ---------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Vectorstore](/docs/how_to/vectorstore_retriever/)                   | Vectorstore                  | No                        | 빠르고 간단한 방법을 찾고 있는 초보자라면, 이 방법을 사용하세요.                                               | 가장 단순한 방법이며 시작하기에 가장 쉬운 방법입니다. 각 텍스트 조각에 대한 임베딩을 생성하는 것을 포함합니다.                                                                                             |
 | [ParentDocument](/docs/how_to/parent_document_retriever/)            | Vectorstore + Document Store | No                        | 페이지에 개별적으로 인덱싱하는 것이 가장 좋지만, 함께 검색하는 것이 좋은 더 작은 정보 조각들이 많이 있는 경우. | 이는 각 문서에 대해 여러 청크를 인덱싱하는 것을 포함합니다. 그런 다음 임베딩 공간에서 가장 유사한 청크를 찾지만, 개별 청크가 아닌 전체 상위 문서를 검색하여 반환합니다.                                    |
@@ -647,20 +647,20 @@ LangChain은 여러 고급 검색 유형을 제공합니다. 아래는 전체 �
 | [Time-Weighted Vectorstore](/docs/how_to/time_weighted_vectorstore/) | Vectorstore                  | No                        | 문서에 타임스탬프가 연결되어 있고, 가장 최신의 문서를 검색하고자 하는 경우                                     | 이는 의미적 유사성(일반 벡터 검색처럼)과 최신성(색인화된 문서의 타임스탬프 확인)을 결합하여 문서를 검색합니다.                                                                                             |
 | [Multi-Query Retriever](/docs/how_to/multiple_queries/)              | Any                          | Yes                       | 사용자가 복잡한 질문을 하고 여러 개의 독립된 정보가 필요한 경우                                                | 이는 LLM을 사용하여 원래의 질문에서 여러 개의 쿼리를 생성합니다. 이는 원래의 쿼리가 여러 주제에 대한 정보를 필요로 할 때 유용합니다. 여러 쿼리를 생성함으로써 각 쿼리에 대한 문서를 검색할 수 있습니다.    |
 
-### Text splitting
+### 텍스트 분할 ( Text splitting )
 
-LangChain은 다양한 유형의 `text splitters`를 제공합니다.
+LangChain은 다양한 유형의 `텍스트 스플리터`를 제공합니다.
 이들은 주요 `langchain` 패키지에서 사용할 수 있지만, 별도의 [`@langchain/textsplitters`](https://www.npmjs.com/package/@langchain/textsplitters) 패키지에서 사용할 수도 있습니다.
 
 표의 열:
 
-- **Name**: text splitter의 이름
-- **Classes**: 이 text splitter를 구현하는 클래스
-- **Splits On**: 이 text splitter가 텍스트를 분할하는 방식
-- **Adds Metadata**: 각 청크의 출처에 대한 메타데이터를 추가하는지 여부
-- **Description**: splitter에 대한 설명 및 사용 권장 사항
+- **이름**: 텍스트 스플리터의 이름
+- **클래스**: 텍스트 스플리터를 구현하는 클래스
+- **분할 기준**: 텍스트 스플리터가 텍스트를 분할하는 방식
+- **메타데이터 추가 여부**: 청크의 출처에 대한 메타데이터를 추가 여부
+- **설명**: splitter에 대한 설명 및 사용 권장사항
 
-| Name      | Classes                                                                 | Splits On                   | Adds Metadata | Description                                                                                                                               |
+| 이름      | 클래스                                                                 | 분할 기준                   | 메타데이터 추가 여부 | 설명                                                                                                                               |
 | --------- | ----------------------------------------------------------------------- | --------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Recursive | [RecursiveCharacterTextSplitter](/docs/how_to/recursive_text_splitter/) | 유저가 정의한 문자의 리스트 |               | 재귀적으로 텍스트를 분할합니다. 이 분할은 관련된 텍스트 조각을 서로 가까이 유지하려고 합니다. 이것으로 텍스트 분할하는 것을 권장드립니다. |
 | Code      | [many languages](/docs/how_to/code_splitter/)                           | 코드(Python, JS) 특화 문자  |               | 코딩 언어에 특화된 문자 기반으로 텍스트를 분할합니다. 총 15개의 다른 프로그래밍 언어를 선택할 수 있습니다.                                |
