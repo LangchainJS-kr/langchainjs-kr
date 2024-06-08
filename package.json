@@ -29,10 +29,12 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.24.7",
     "@docusaurus/preset-classic": "^3.3.2",
     "@docusaurus/tsconfig": "3.3.2",
     "@docusaurus/types": "3.3.2",
     "@swc/core": "^1.5.24",
+    "@typescript-eslint/eslint-plugin": "^7.12.0",
     "cz-conventional-changelog": "^3.3.0",
     "cz-customizable": "^7.0.0",
     "eslint": "^8.57.0",
@@ -70,6 +72,9 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog",
       "name": "cz_customize"
+    },
+    "cz-customizable": {
+      "config": ".cz-config.ts"
     }
   },
   "lint-staged": {

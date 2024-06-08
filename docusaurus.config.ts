@@ -1,8 +1,8 @@
 import type * as Preset from "@docusaurus/preset-classic";
 import type { Config } from "@docusaurus/types";
 import { themes as prismThemes } from "prism-react-renderer";
-import {ProvidePlugin} from 'webpack'
-import path from "path"
+import { ProvidePlugin } from "webpack";
+import path from "path";
 
 const examplesPath = path.resolve(__dirname, "examples", "src");
 const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
@@ -85,11 +85,9 @@ const config: Config = {
     prism: {
       theme: {
         ...prismThemes.vsLight,
-        
       },
       darkTheme: {
         ...prismThemes.vsDark,
-        
       },
     },
   } satisfies Preset.ThemeConfig,

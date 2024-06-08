@@ -17,7 +17,9 @@
     "docs/api",
     "node_modules",
     "docs/_static",
-    "static"
+    "static",
+    ".cz-config.ts",
+    "docusaurus.config.ts"
   ],
   "rules": {
     "import/no-unresolved": [
