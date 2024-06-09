@@ -7,34 +7,29 @@ pagination_next: null
 
 # 텍스트를 라벨로 분류하기
 
-Tagging means labeling a document with classes such as:
+태깅은 다음과 같은 클래스로 문서를 라벨링하는 것을 의미합니다:
 
-- sentiment
-- language
-- style (formal, informal etc.)
-- covered topics
-- political tendency
+- 감정 (sentiment)
+- 언어 (language)
+- 스타일 (예: 격식체, 비격식체)
+- 다루는 주제 (covered topics)
+- 정치적 성향 (political tendency)
 
 <figure>
-  <img src="../../static/img/tagging.png" alt="Image description" />
-  <figcaption aria-hidden="true">Image description</figcaption>
+  <img src="../../static/img/tagging.png" alt="tagging.png" />
 </figure>
 
-## Overview
+## 개요
 
-Tagging has a few components:
+태깅은 몇 가지 컴포넌트로 이루어져 있습니다:
 
-- `function`: Like [extraction](../../docs/tutorials/extraction),
-  tagging uses
-  [functions](https://openai.com/blog/function-calling-and-other-api-updates)
-  to specify how the model should tag a document
-- `schema`: defines how we want to tag the document
+- `function`: [추출](../../docs/tutorials/extraction)과 마찬가지로, 태깅은 모델이 문서를 태그하는 방법을 지정하기 위해 [함수](https://openai.com/blog/function-calling-and-other-api-updates)를 사용합니다.
+- `schema`: 문서를 어떻게 태그할 것인지 정의합니다.
 
-## Quickstart
+## 빠른 시작
 
-Let’s see a very straightforward example of how we can use OpenAI tool
-calling for tagging in LangChain. We’ll use the
-`.withStructuredOutput()` method supported by OpenAI models:
+아주 간단한 예를 통해 LangChain에서 태깅을 위해 OpenAI 도구 호출을 사용하는 방법을 살펴보겠습니다. 
+OpenAI 모델이 지원하는 `.withStructuredOutput()` 메서드를 사용할 것입니다:
 
 ```mdx-code-block
 import Npm2Yarn from "@theme/Npm2Yarn"
@@ -44,7 +39,7 @@ import Npm2Yarn from "@theme/Npm2Yarn"
 </Npm2Yarn>
 ```
 
-Let’s specify a [Zod](https://zod.dev) schema with a few properties and
+[Zod](https://zod.dev)스키마를 사용하여 몇 가지 속성과 그에 기대되는 타입을 우리의 스키마에 지정해봅시다.
 their expected type in our schema.
 
 ```typescript
@@ -78,7 +73,7 @@ const llm = new ChatOpenAI({
   temperature: 0,
   model: "gpt-3.5-turbo-0125",
 });
-// Name is optional, but gives the models more clues as to what your schema represents
+// 이름은 선택 사항이지만, 스키마가 무엇을 나타내는지 모델에 더 많은 정보를 제공합니다.
 const llmWihStructuredOutput = llm.withStructuredOutput(classificationSchema, {
   name: "extractor",
 });
@@ -96,25 +91,23 @@ await taggingChain.invoke({ input });
 { sentiment: "positive", aggressiveness: 1, language: "Spanish" }
 ```
 
-As we can see in the example, it correctly interprets what we want.
+예제에서 볼 수 있듯이, 우리가 원하는 것을 정확하게 해석합니다.
 
-The results vary so that we may get, for example, sentiments in
-different languages (‘positive’, ‘enojado’ etc.).
+결과는 다양하게 나타날 수 있으며, 예를 들어 다른 언어로 된 감정(`positive`, `enojado` 등)을 받을 수 있습니다.
 
-We will see how to control these results in the next section.
+다음 섹션에서는 이러한 결과를 어떻게 제어할 수 있는지 살펴보겠습니다.
 
-## Finer control
+## 정교한 제어(Finer control)
 
-Careful schema definition gives us more control over the model’s output.
+스키마 정의의 따라 모델의 출력을 보다 더 정교하게 제어할 수 있습니다.
 
-Specifically, we can define:
+특히, 다음을 제어할 수 있습니다:
 
-- possible values for each property
-- description to make sure that the model understands the property
-- required properties to be returned
+- 각 속성에 대한 가능한 값
+- 모델이 속성을 이해하도록 돕기 위한 설명
+- 반환되어야 하는 필수 속성
 
-Let’s redeclare our Zod schema to control for each of the previously
-mentioned aspects using enums:
+앞서 언급한 각 측면을 제어하기 위해 enums를 사용하여 우리의 Zod 스키마를 다시 선언해봅시다:
 
 ```typescript
 import { z } from "zod";
@@ -191,8 +184,8 @@ await chain.invoke({ input });
 { sentiment: "neutral", aggressiveness: 3, language: "english" }
 ```
 
-The [LangSmith
+[LangSmith
 trace](https://smith.langchain.com/public/455f5404-8784-49ce-8851-0619b99e936f/r)
-lets us peek under the hood:
+를 통해 내부를 살펴볼 수 있습니다.
 
 ![](../../static/img/classification_ls_trace.png)
