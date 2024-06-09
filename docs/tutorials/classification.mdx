@@ -21,7 +21,7 @@ pagination_next: null
 
 ## 개요
 
-태깅은 몇 가지 구성 요소로 이루어져 있습니다:
+태깅은 몇 가지 컴포넌트로 이루어져 있습니다:
 
 - `function`: [추출](../../docs/tutorials/extraction)과 마찬가지로, 태깅은 모델이 문서를 태그하는 방법을 지정하기 위해 [함수](https://openai.com/blog/function-calling-and-other-api-updates)를 사용합니다.
 - `schema`: 문서를 어떻게 태그할 것인지 정의합니다.
@@ -99,7 +99,7 @@ await taggingChain.invoke({ input });
 
 ## 정교한 제어(Finer control)
 
-스키마를 신중하게 정의하면 모델의 출력에 대한 더 많은 제어를 제공합니다.
+스키마 정의의 따라 모델의 출력을 보다 더 정교하게 제어할 수 있습니다.
 
 특히, 다음을 제어할 수 있습니다:
 
