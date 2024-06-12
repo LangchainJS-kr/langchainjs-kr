@@ -40,7 +40,6 @@ import Npm2Yarn from "@theme/Npm2Yarn"
 ```
 
 [Zod](https://zod.dev)스키마를 사용하여 몇 가지 속성과 그에 기대되는 타입을 우리의 스키마에 지정해봅시다.
-their expected type in our schema.
 
 ```typescript
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -107,7 +106,7 @@ await taggingChain.invoke({ input });
 - 모델이 속성을 이해하도록 돕기 위한 설명
 - 반환되어야 하는 필수 속성
 
-앞서 언급한 각 측면을 제어하기 위해 enums를 사용하여 우리의 Zod 스키마를 다시 선언해봅시다:
+앞서 작성한 각 스키마 속성을 열거형(enums)을 사용하여 Zod 스키마를 아래와 같이 선언해볼 수 있습니다.
 
 ```typescript
 import { z } from "zod";
