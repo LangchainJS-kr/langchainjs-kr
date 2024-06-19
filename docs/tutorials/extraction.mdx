@@ -6,29 +6,26 @@ pagination_prev: null
 pagination_next: null
 ---
 
-In this tutorial, we will build a chain to extract structured
-information from unstructured text.
+이 튜토리얼 에서는 비정형 텍스트에서 정형화된 정보를 추출하는 체인을 구축할 것입니다.
 
-:::important
+:::주의!
 
-This tutorial will only work with models that support **function/tool
-calling**
+이 튜토리얼은 **함수/도구 호출 ( Function/tool calling )** 을 지원하는 모델에서만 작동합니다.
 
 :::
 
 ## Concepts
 
-Concepts we will cover are: - Using [language
-models](../../docs/concepts/#chat-models) - Using [function/tool
-calling](../../docs/concepts/#function-tool-calling) - Debugging and
-tracing your application using
-[LangSmith](../../docs/concepts/#langsmith)
+우리가 다룰 개념들: 
+- [languagemodels](../../docs/concepts/#chat-models) 사용하기
+- [function/toolcalling](../../docs/concepts/#function-tool-calling) 사용하기
+- [LangSmith](../../docs/concepts/#langsmith)를 사용해 어플리케이션 디버깅 및 추적하기 
 
 ## Setup
 
 ### Installation
 
-To install LangChain run:
+LangChain을 설치하려면 다음 명령을 실행하세요:
 
 ```mdx-code-block
 import Npm2Yarn from '@theme/Npm2Yarn';
@@ -43,14 +40,14 @@ guide](../../docs/how_to/installation/).
 
 ### LangSmith
 
-Many of the applications you build with LangChain will contain multiple
-steps with multiple invocations of LLM calls. As these applications get
-more and more complex, it becomes crucial to be able to inspect what
-exactly is going on inside your chain or agent. The best way to do this
-is with [LangSmith](https://smith.langchain.com).
 
-After you sign up at the link above, make sure to set your environment
-variables to start logging traces:
+랭체인을 이용한 수많은 애플리케이션들은 여러 단계에서 LLM 호출을 여러번 수행할 것입니다.
+애플리케이션이 복잡하면 복잡해질수록, 애플리케이션의 체인이나 에이전트 안에서 무엇이 이루어지고 있는지 검토하는것은 중요해집니다.
+최고의 방법은 [LangSmith](https://smith.langchain.com)를 이용하는 것입니다.
+
+위의 링크에 가입하고, 반드시 환경변수를 설정해서 로그 추적을 시작하세요.
+
+로그 추적을 시작하기 위한 변수들:
 
 ```shell
 export LANGCHAIN_TRACING_V2="true"
@@ -59,11 +56,9 @@ export LANGCHAIN_API_KEY="..."
 
 ## The Schema
 
-First, we need to describe what information we want to extract from the
-text.
+먼저, 우리가 텍스트에서 추출하고자 하는 정보가 무엇인지 정확히 설명해야 합니다.
 
-We’ll use [Zod](https://zod.dev) to define an example schema that
-extracts personal information.
+[Zod](https://zod.dev)을 이용해서 개인정보 추출하는 예제 스키마를 정의할 것입니다.
 
 ```mdx-code-block
 <Npm2Yarn>
@@ -84,34 +79,29 @@ const personSchema = z.object({
 });
 ```
 
-There are two best practices when defining schema:
+스키마를 정의할때 두가지 모범 사례 :
 
-1.  Document the **attributes** and the **schema** itself: This
-    information is sent to the LLM and is used to improve the quality of
-    information extraction.
-2.  Do not force the LLM to make up information! Above we used
-    `.nullish()` for the attributes allowing the LLM to output `null` or
-    `undefined` if it doesn’t know the answer.
+1. **속성**과 **스키마** 자체를 문서화하세요 : 이 정보는 LLM에 전달되어 정보 추출의 품질을 향상시키는데 사용됩니다.
+2.  LLM이 정보를 꾸며내게 하지 마세요 : 위에서는 LLM이 답을 모를경우 `.nullish()`를 이용하여 LLM에게 결과값으로 `null` 또는 `undefined`를 출력하도록 허용했습니다.
 
-:::important
+:::중요
 
-For best performance, document the schema well and make sure the model
-isn’t force to return results if there’s no information to be extracted
-in the text.
+좋은 성능을 위해서, 스키마를 잘 문서화하세요. 
+텍스트에서 추출될 정보가 없을경우, 모델에게 결과값을 반환하도록 강제하지 마세요.
 
 :::
 
 ## The Extractor
 
-Let’s create an information extractor using the schema we defined above.
+우리가 위에 정의한 스키마를 이용하여 정보 추출기를 생성해 봅시다!
 
 ```typescript
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-// Define a custom prompt to provide instructions and any additional context.
-// 1) You can add examples into the prompt template to improve extraction quality
-// 2) Introduce additional parameters to take context into account (e.g., include metadata
-//    about the document from which the text was extracted.)
+//LLM에게 지시사항과 추가적인 맥락을 제공하는 사용자 정의 프롬프트를 정의하세요
+// 1) 추출 품질을 향상시키기 위해 예시를 프롬프트 템플릿에 추가할 수 있습니다.
+// 2) 추가 매개변수를 도입하여 맥락을 고려합니다.(예시, 텍스트에서 추출된 문서의 메타데이터를 포함하여)
+
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "system",
