@@ -86,7 +86,8 @@ const personSchema = z.object({
 
 :::중요
 
-좋은 성능을 위해서, 스키마를 잘 문서화하세요. 
+좋은 성능을 위해서 스키마를 문서화하세요. 
+
 텍스트에서 추출될 정보가 없을경우, 모델에게 결과값을 반환하도록 강제하지 마세요.
 
 :::
@@ -110,18 +111,17 @@ Only extract relevant information from the text.
 If you do not know the value of an attribute asked to extract,
 return null for the attribute's value.`,
   ],
-  // Please see the how-to about improving performance with
-  // reference examples.
+  // 
+  // 성능을 향상을 위한 방법과 참조예제들을 참고하세요  
   // ["placeholder", "{examples}"],
   ["human", "{text}"],
 ]);
 ```
 
-We need to use a model that supports function/tool calling.
+우리는 함수/도구호출을 지원하는 모델이 필요합니다.
 
-Please review [the
-documentation](../../docs/concepts#function-tool-calling) for list of
-some models that can be used with this API.
+이 API와 사용할 수 있는 몇 가지 모델 목록[the
+documentation](../../docs/concepts#function-tool-calling)을 참조하세요
 
 ```typescript
 import { ChatAnthropic } from "@langchain/anthropic";
@@ -141,24 +141,21 @@ await runnable.invoke({ text });
 { name: "Alan Smith", hair_color: "blond", height_in_meters: "1.83" }
 ```
 
-:::important
+:::중요
 
-Extraction is Generative 🤯
+추출은 생성형이다 🤯
 
-LLMs are generative models, so they can do some pretty cool things like
-correctly extract the height of the person in meters even though it was
-provided in feet!
+LLM은 생성형 모델이므로, 피트 단위로 제공된 사람의 키를 미터 단위로 정확히 추출하는 등의 멋진 작업을 할 수 있습니다!
+
 
 :::
 
-We can see the LangSmith trace
-[here](https://smith.langchain.com/public/3d44b7e8-e7ca-4e02-951d-3290ccc89d64/r).
+우리는 LangSmith의 추적을 확인할 수 있습니다.
+[here](https://smith.langchain.com/public/3d44b7e8-e7ca-4e02-951d-3290ccc89d64/r)
 
-Even though we defined our schema with the variable name `personSchema`,
-Zod is unable to infer this name and therefore does not pass it along to
-the model. To help give the LLM more clues as to what your provided
-schema represents, you can also give the schema you pass to
-`withStructuredOutput()` a name:
+비록 우리가 우리의 스키마의 변수이름을 `personSchema`으로 정의했음에도 불구하고, Zod는 이 이름을 추론할 수 없어서 모델에게 전달하지 못합니다. LLM에게
+당신이 제공하는 스키마가 무엇을 나타내는지 더 많은 단서를 주기위해, `withStructuredOutput()`에 이름을 전달할 수 있습니다.
+
 
 ```typescript
 const runnable = prompt.pipe(
@@ -174,15 +171,12 @@ await runnable.invoke({ text });
 { name: "Alan Smith", hair_color: "blond", height_in_meters: "1.83" }
 ```
 
-This can improve performance in many cases.
+이것은 다양한 경우에 성능을 향상시킬 수 있습니다.
 
-## Multiple Entities
+## 다중 엔티티 (Multiple Entities)
 
-In **most cases**, you should be extracting a list of entities rather
-than a single entity.
-
-This can be easily achieved using Zod by nesting models inside one
-another.
+**대다수의 경우**에, 하나의 엔티티 보다는 여러 엔티티들의 목록을 추출해야 합니다.  
+zod를 사용해서 모델들을 서로 중첩하면 이를 쉽게 달성할 수 있습니다
 
 ```typescript
 import { z } from "zod";
@@ -201,11 +195,10 @@ const dataSchema = z.object({
 });
 ```
 
-:::important
+:::중요
 
-Extraction might not be perfect here. Please continue to see how to use
-**Reference Examples** to improve the quality of extraction, and see the
-**guidelines** section!
+여기서 추출은 완벽하지 않을 수 있습니다. 
+계속해서 추출 품질을 향상시키는 **참조예제들**의 사용법을 확인하고, **가이드라인** 섹션을 참고하세요
 
 :::
 
@@ -225,31 +218,28 @@ await runnable.invoke({ text });
 }
 ```
 
-:::tip
+:::팁
 
-When the schema accommodates the extraction of **multiple entities**, it
-also allows the model to extract **no entities** if no relevant
-information is in the text by providing an empty list.
+스키마가 **여러 엔티티**들의 추출을 지원할 떄, 만약 텍스트에 관련 정보가 없으면 빈 목록을 제공함으로써 
+**모델이 개체를 추출하지(no entities)** 않는게 허용될 수 잇습니다.
 
-This is usually a **good** thing! It allows specifying **required**
-attributes on an entity without necessarily forcing the model to detect
-this entity.
+이것은 일반적으로 **좋은 점**입니다! 
+이는 모델이 이 엔티티를 감지하도록 강제하지 않으면서도 **필수 애트리뷰트들**을 명시할 수 있게 합니다.
 
 :::
 
-We can see the LangSmith trace
+우리는 LangSmith를 이용해 추적을 확인할 수 있습니다.
 [here](https://smith.langchain.com/public/272096ab-9ac5-43f9-aa00-3b8443477d17/r)
 
 ## Next steps
 
-Now that you understand the basics of extraction with LangChain, you’re
-ready to proceed to the rest of the how-to guides:
+이제 당신은 랭체인의 기본적인 추출을 이해했습니다. 
+나머지 사용가이드를 진행할 준비가 되었어요:
 
-- [Add Examples](../../docs/how_to/extraction_examples): Learn how to
-  use **reference examples** to improve performance.
-- [Handle Long Text](../../docs/how_to/extraction_long_text): What
-  should you do if the text does not fit into the context window of
-  the LLM?
-- [Use a Parsing Approach](../../docs/how_to/extraction_parse): Use a
-  prompt based approach to extract with models that do not support
-  **tool/function calling**.
+- [추가적인 예제들](../../docs/how_to/extraction_examples): 
+  **참조 예제** 들의 성능을 향상시키는 방법을 배워보세요.
+- [긴 텍스트 다루기](../../docs/how_to/extraction_long_text): 
+  LLM의 문맥 창에 텍스트가 맞지 않는경우 어떻게 해야 할까요 ?
+- [파싱 접근방식을 사용해보세요](../../docs/how_to/extraction_parse): 
+  함수/도구 호출을 지원하지 않는 모델에서 추출하기위해 프롬프트에 기반한 접근방식을 사용하세요. 
+
