@@ -55,7 +55,7 @@ export LANGCHAIN_API_KEY="..."
 
 ## 스키마 (The Schema)
 
-먼저 우리가 텍스트에서 추출하고자 하는 정보가 무엇인지 정확히 설명해야 합니다.
+먼저 우리가 텍스트에서 추출하고자 하는 정보를 정확히 설명하는 스키마를 정의해야 합니다
 
 [Zod](https://zod.dev)을 이용해서 개인정보를 추출하는 예제 스키마를 정의할 것입니다.
 
@@ -119,8 +119,7 @@ return null for the attribute's value.`,
 
 우리는 함수/도구 호출을 지원하는 모델이 필요합니다.
 
-이 API와 사용할 수 있는 몇 가지 모델 목록[the
-documentation](../../docs/concepts#function-tool-calling)을 참조하세요
+이 API와 사용할 수 있는 몇 가지 모델 목록은 [문서(함수/도구 호출 ( Function/Tool Calling )](../../docs/concepts#함수도구-호출--functiontool-calling-)을 참조하세요
 
 ```typescript
 import { ChatAnthropic } from "@langchain/anthropic";
