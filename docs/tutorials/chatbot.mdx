@@ -242,7 +242,7 @@ AIMessage {
 
 이제 좋은 응답을 얻을 수 있음을 확인할 수 있습니다!
 
-이것이 채팅봇이 대화형으로 상호작용할 수 있는 기본 아이디어입니다. 그렇다면
+이것이 채팅봇이 대화형으로 상호작용 할 수 있는 기본 아이디어입니다. 그렇다면
 이를 어떻게 구현하는 것이 가장 좋을까요?
 
 ## 메시지 히스토리
@@ -257,7 +257,7 @@ AIMessage {
 받아 메시지 히스토리 객체를 반환해야 합니다. 이 `sessionId`는 별도의 대화를
 구분하는 데 사용되며, 새로운 체인을 호출할 때 설정의 일부로 전달해야 합니다.
 
-포맷팅에 도움이 되는 프롬프트를 추가하여 간단한 체인도 만들어 봅시다:
+포매팅에 도움이 되는 프롬프트를 추가하여 간단한 체인도 만들어 봅시다:
 
 ```typescript
 // We use an ephemeral, in-memory chat history for this demo.
@@ -291,7 +291,7 @@ const withMessageHistory = new RunnableWithMessageHistory({
 });
 ```
 
-이제 매번 실행 가능한 객체에 전달할 `config`를 생성해야 합니다.
+이제 매번 실행할 수 있는 객체에 전달할 `config`를 생성해야 합니다.
 이 설정은 입력의 일부는 아니지만 유용한 정보를 포함합니다. 이 경우
 `session_id`를 포함하고자 합니다. 다음과 같은 형태가 되어야 합니다:
 
@@ -448,7 +448,7 @@ response.content;
 "I'm afraid I don't actually know your name. You haven't provided that detail to me yet."
 ```
 
-하지만 최근 10개의 메시지 안에 있는 정보에 대해 물어보면 여전히 기억하는 것을 확인할 수 있습니다.
+하지만 최근 10개의 메시지 안에 있는 정보에 관해 물어보면 여전히 기억하는 것을 확인할 수 있습니다.
 
 ```typescript
 const response = await chain.invoke({
@@ -533,7 +533,7 @@ trace](https://smith.langchain.com/public/ebc2e1e7-0703-43f7-a476-8cb8cbd7f61a/r
 
 이제 채팅봇 기능은 갖추게 되었습니다. 그러나 채팅봇 애플리케이션에서 매우 중요한
 사용자 경험(UX) 고려 사항 중 하나는 스트리밍입니다. LLM은 때때로 응답하는 데
-시간이 걸릴 수 있으므로, 사용자 경험을 향상시키기 위해 대부분의 애플리케이션에서는
+시간이 걸릴 수 있으므로, 사용자 경험을 향상하기 위해 대부분의 애플리케이션에서는
 각 토큰이 생성될 때마다 스트리밍하여 반환합니다. 이렇게 하면 사용자가 진행 상황을
 볼 수 있습니다.
 
@@ -606,9 +606,9 @@ Why
   통해 채팅봇 경험 제공
 - [Agents](../../docs/tutorials/agents): 동작을 수행할 수 있는 채팅봇 구축
 
-세부 사항을 더 깊이 파고들고 싶다면 다음 항목을 확인해보세요:
+세부 사항을 더 깊이 파고들고 싶다면 다음 항목을  보세요:
 
 - [Streaming](../../docs/how_to/streaming): 스트리밍은 채팅 애플리케이션에
   _매우_ 중요합니다
 - [How to add message history](../../docs/how_to/message_history): 메시지
-  히스토리와 관련된 모든 내용을 깊이 있게 탐구할 수 있습니다
+  히스토리와 관련된 모든 내용을 깊이 있게 탐구할 수 있습니다.
