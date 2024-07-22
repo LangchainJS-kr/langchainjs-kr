@@ -6,50 +6,43 @@ pagination_prev: null
 pagination_next: null
 ---
 
-## Overview
+## 개요
 
-We’ll go over an example of how to design and implement an LLM-powered
-chatbot. This chatbot will be able to have a conversation and remember
-previous interactions.
+이번 예제에서는 LLM 기반의 채팅봇을 설계하고 구현하는 방법을 살펴보겠습니다.
+이 채팅봇은 대화를 나누고 이전 상호작용을 기억할 수 있습니다.
 
-Note that this chatbot that we build will only use the language model to
-have a conversation. There are several other related concepts that you
-may be looking for:
+우리가 구축할 이 채팅봇은 오직 언어 모델만을 사용하여 대화를 나눕니다.
+다음과 같은 다른 관련 개념들이 있을 수 있습니다:
 
-- [Conversational RAG](../../docs/tutorials/qa_chat_history): Enable a
-  chatbot experience over an external source of data
-- [Agents](../../docs/tutorials/agents): Build a chatbot that can take
-  actions
+- [Conversational RAG](../../docs/tutorials/qa_chat_history): 외부 데이터
+  소스를 통해 채팅봇 경험 제공
+- [Agents](../../docs/tutorials/agents): 동작을 수행할 수 있는 채팅봇 구축
 
-This tutorial will cover the basics which will be helpful for those two
-more advanced topics, but feel free to skip directly to there should you
-choose.
+이 튜토리얼에서는 두 고급 주제에 활용하기 좋은 기본 사항을 다룰 것이며, 원하시면 바로
+그쪽으로 넘어가도 좋습니다.
 
-## Concepts
+## 개념
 
-Here are a few of the high-level components we’ll be working with:
+다음은 우리가 작업할 고수준 컴포넌트들입니다:
 
-- [`Chat Models`](../../docs/concepts/#chat-models). The chatbot
-  interface is based around messages rather than raw text, and
-  therefore is best suited to Chat Models rather than text LLMs.
-- [`Prompt Templates`](../../docs/concepts/#prompt-templates), which
-  simplify the process of assembling prompts that combine default
-  messages, user input, chat history, and (optionally) additional
-  retrieved context.
-- [`Chat History`](../../docs/concepts/#chat-history), which allows a
-  chatbot to “remember” past interactions and take them into account
-  when responding to followup questions.
-- Debugging and tracing your application using
-  [LangSmith](../../docs/concepts/#langsmith)
+- [`Chat Models`](../../docs/concepts/#chat-models): 채팅봇 인터페이스는
+  일반 텍스트보다는 메시지 기반이므로, 텍스트 LLM보다는 채팅 모델에 더 적합합니다.
+- [`Prompt Templates`](../../docs/concepts/#prompt-templates): 기본 메시지,
+  사용자 입력, 채팅 기록, 추가로 검색된 컨텍스트를 조합하는 프로세스를
+  단순화합니다.
+- [`Chat History`](../../docs/concepts/#chat-history): 채팅봇이 과거
+  상호작용을 "기억"하고 후속 질문에 응답할 때 이를 고려할 수 있게
+  합니다.
+- [LangSmith](../../docs/concepts/#langsmith)을 사용한 애플리케이션 디버깅
+  및 추적
 
-We’ll cover how to fit the above components together to create a
-powerful conversational chatbot.
+위 컴포넌트들을 결합하여 강력한 대화형 채팅봇을 만드는 방법을 다룰 것입니다.
 
-## Setup
+## 설정
 
-### Installation
+### 설치
 
-To install LangChain run:
+LangChain을 설치하려면 다음을 실행하십시오:
 
 ```mdx-code-block
 import Npm2Yarn from "@theme/Npm2Yarn"
@@ -59,30 +52,28 @@ import Npm2Yarn from "@theme/Npm2Yarn"
 </Npm2Yarn>
 ```
 
-For more details, see our [Installation
-guide](../../docs/how_to/installation).
+자세한 내용은 [설치 가이드](../../docs/how_to/installation)를 참조하세요.
 
 ### LangSmith
 
-Many of the applications you build with LangChain will contain multiple
-steps with multiple invocations of LLM calls. As these applications get
-more and more complex, it becomes crucial to be able to inspect what
-exactly is going on inside your chain or agent. The best way to do this
-is with [LangSmith](https://smith.langchain.com).
+LangChain으로 구축한 많은 애플리케이션은 여러 단계와 LLM 호출이 포함됩니다.
+이러한 애플리케이션이 점점 더 복잡해짐에 따라 체인이나 에이전트 내부에서
+무슨 일이 일어나고 있는지 검사하는 것이 중요해집니다.
+이를 대한 최선책은 [LangSmith](https://smith.langchain.com)를
+사용하는 것입니다.
 
-After you sign up at the link above, make sure to set your environment
-variables to start logging traces:
+위 링크에서 가입한 후 환경 변수를 설정하여 추적을 시작하십시오:
 
 ```shell
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="..."
 ```
 
-## Quickstart
+## 빠른 시작
 
-First up, let’s learn how to use a language model by itself. LangChain
-supports many different language models that you can use
-interchangably - select the one you want to use below!
+먼저, 언어 모델을 단독으로 사용하는 방법을 배워봅시다. LangChain은
+서로 교환하여 사용할 수 있는 다양한 언어 모델을 지원합니다.
+아래에서 사용하고자 하는 모델을 선택하십시오!
 
 ```mdx-code-block
 import ChatModelTabs from "@theme/ChatModelTabs";
@@ -90,10 +81,9 @@ import ChatModelTabs from "@theme/ChatModelTabs";
 <ChatModelTabs openaiParams={`model="gpt-3.5-turbo"`} />
 ```
 
-Let’s first use the model directly. `ChatModel`s are instances of
-LangChain “Runnables”, which means they expose a standard interface for
-interacting with them. To just simply call the model, we can pass in a
-list of messages to the `.invoke` method.
+먼저 모델을 직접 사용해 봅시다. `ChatModel`들은 LangChain의 "Runnable"의
+인스턴스로, 상호작용을 위한 표준 인터페이스를 노출합니다. 모델을 호출하기
+위해서는 메시지 목록을 `.invoke` 메서드에 전달할 수 있습니다.
 
 ```typescript
 import { HumanMessage } from "@langchain/core/messages";
@@ -143,8 +133,7 @@ AIMessage {
 }
 ```
 
-The model on its own does not have any concept of state. For example, if
-you ask a followup question:
+모델 자체는 상태의 개념이 없습니다. 예를 들어 후속 질문을 하면:
 
 ```typescript
 await model.invoke([new HumanMessage({ content: "What's my name?" })]);
@@ -192,15 +181,12 @@ AIMessage {
 }
 ```
 
-Let’s take a look at the example [LangSmith
-trace](https://smith.langchain.com/public/e5a0ae1b-32b9-4beb-836d-38f40bfa6762/r)
+예제 [LangSmith 추적](https://smith.langchain.com/public/e5a0ae1b-32b9-4beb-836d-38f40bfa6762/r)을
+살펴보면 이전 대화 턴을 컨텍스트에 넣지 않고 질문에 답할 수 없음을 알 수 있습니다.
+이것은 좋은 채팅봇 경험이라고 할 수 없겠습니다.
 
-We can see that it doesn’t take the previous conversation turn into
-context, and cannot answer the question. This makes for a terrible
-chatbot experience!
-
-To get around this, we need to pass the entire conversation history into
-the model. Let’s see what happens when we do that:
+이 문제를 해결하려면 전체 대화 기록을 모델에 전달해야 합니다. 이를 통해 어떤
+결과가 나오는지 보겠습니다:
 
 ```typescript
 import { AIMessage } from "@langchain/core/messages";
@@ -254,28 +240,24 @@ AIMessage {
 }
 ```
 
-And now we can see that we get a good response!
+이제 좋은 응답을 얻을 수 있음을 확인할 수 있습니다!
 
-This is the basic idea underpinning a chatbot’s ability to interact
-conversationally. So how do we best implement this?
+이것이 채팅봇이 대화형으로 상호작용 할 수 있는 기본 아이디어입니다. 그렇다면
+이를 어떻게 구현하는 것이 가장 좋을까요?
 
-## Message History
+## 메시지 히스토리
 
-We can use a Message History class to wrap our model and make it
-stateful. This will keep track of inputs and outputs of the model, and
-store them in some datastore. Future interactions will then load those
-messages and pass them into the chain as part of the input. Let’s see
-how to use this!
+우리는 모델을 감싸고 상태를 유지하기 위해 메시지 히스토리 클래스를 사용할 수
+있습니다. 이 클래스는 모델의 입력과 출력을 추적하고 이를 데이터 저장소에
+저장합니다. 이후의 상호작용에서는 이러한 메시지를 불러와 입력의 일부로 체인에
+전달합니다. 사용 방법을 살펴보겠습니다!
 
-We import the relevant classes and set up our chain which wraps the
-model and adds in this message history. A key part here is the function
-we pass into as the `getSessionHistory()`. This function is expected to
-take in a `sessionId` and return a Message History object. This
-`sessionId` is used to distinguish between separate conversations, and
-should be passed in as part of the config when calling the new chain.
+관련 클래스를 가져와 모델을 감싸고 이 메시지 히스토리를 추가하는 체인을 설정합니다.
+여기서 중요한 부분은 `getSessionHistory()` 함수입니다. 이 함수는 `sessionId`를
+받아 메시지 히스토리 객체를 반환해야 합니다. 이 `sessionId`는 별도의 대화를
+구분하는 데 사용되며, 새로운 체인을 호출할 때 설정의 일부로 전달해야 합니다.
 
-Let’s also create a simple chain by adding a prompt to help with
-formatting:
+포매팅에 도움이 되는 프롬프트를 추가하여 간단한 체인도 만들어 봅시다:
 
 ```typescript
 // We use an ephemeral, in-memory chat history for this demo.
@@ -309,10 +291,9 @@ const withMessageHistory = new RunnableWithMessageHistory({
 });
 ```
 
-We now need to create a `config` that we pass into the runnable every
-time. This config contains information that is not part of the input
-directly, but is still useful. In this case, we want to include a
-`session_id`. This should look like:
+이제 매번 실행할 수 있는 객체에 전달할 `config`를 생성해야 합니다.
+이 설정은 입력의 일부는 아니지만 유용한 정보를 포함합니다. 이 경우
+`session_id`를 포함하고자 합니다. 다음과 같은 형태가 되어야 합니다:
 
 ```typescript
 const config = {
@@ -350,9 +331,8 @@ followupResponse.content;
 "Your name is Bob. You introduced yourself as Bob at the start of our conversation."
 ```
 
-Great! Our chatbot now remembers things about us. If we change the
-config to reference a different `session_id`, we can see that it starts
-the conversation fresh.
+좋습니다! 이제 우리의 채팅봇은 우리에 대한 정보를 기억합니다. 설정에서 다른
+`session_id`를 참조하도록 변경하면 대화가 새로 시작되는 것을 볼 수 있습니다.
 
 ```typescript
 const config = {
@@ -399,26 +379,22 @@ response.content;
 `Your name is Bob. I clearly remember you telling me "Hi! I'm Bob" when we started talking.`
 ```
 
-This is how we can support a chatbot having conversations with many
-users!
+이렇게 하면 여러 사용자와 대화를 나누는 채팅봇을 지원할 수 있습니다!
 
-## Managing Conversation History
+## 대화 기록 관리
 
-One important concept to understand when building chatbots is how to
-manage conversation history. If left unmanaged, the list of messages
-will grow unbounded and potentially overflow the context window of the
-LLM. Therefore, it is important to add a step that limits the size of
-the messages you are passing in.
+채팅봇을 구축할 때 이해해야 할 중요한 개념 중 하나는 대화 기록을 관리하는
+방법입니다. 관리를 하지 않으면 메시지 목록이 무한히 증가하여 LLM의 컨텍스트
+윈도우를 초과할 수 있습니다. 따라서 전달하는 메시지의 크기를 제한하는 단계를
+추가하는 것이 중요합니다.
 
-**Importantly, you will want to do this BEFORE the prompt template but
-AFTER you load previous messages from Message History.**
+**중요한 것은, 이 작업을 프롬프트 템플릿 이전에 하지만 메시지 히스토리에서
+이전 메시지를 로드한 후에 수행해야 한다는 점입니다.**
 
-We can do this by adding a simple step in front of the prompt that
-modifies the `chat_history` key appropriately, and then wrap that new
-chain in the Message History class. First, let’s define a function that
-will modify the messages passed in. Let’s make it so that it selects the
-10 most recent messages. We can then create a new chain by adding that
-at the start.
+프롬프트 앞에 간단한 단계를 추가하여 `chat_history` 키를 적절히 수정하고,
+새로운 체인을 메시지 히스토리 클래스에 래핑함으로써 이를 수행할 수 있습니다.
+먼저 전달된 메시지를 수정하는 함수를 정의합시다. 제일 최근 10개의 메시지를 선택하도록
+만듭니다. 그런 다음, 새로운 체인을 생성합니다.
 
 ```typescript
 import type { BaseMessage } from "@langchain/core/messages";
@@ -440,9 +416,8 @@ const chain = RunnableSequence.from([
 ]);
 ```
 
-Let’s now try it out! If we create a list of messages more than 10
-messages long, we can see what it no longer remembers information in the
-early messages.
+이제 시도해 봅시다! 10개 이상의 메시지 목록을 생성하면 초기 메시지의 정보를
+기억하지 않는 것을 확인할 수 있습니다.
 
 ```typescript
 const messages = [
@@ -473,8 +448,7 @@ response.content;
 "I'm afraid I don't actually know your name. You haven't provided that detail to me yet."
 ```
 
-But if we ask about information that is within the last ten messages, it
-still remembers it
+하지만 최근 10개의 메시지 안에 있는 정보에 관해 물어보면 여전히 기억하는 것을 확인할 수 있습니다.
 
 ```typescript
 const response = await chain.invoke({
@@ -488,11 +462,9 @@ response.content;
 "You said earlier that you like vanilla ice cream."
 ```
 
-Let’s now wrap this chain in a `RunnableWithMessageHistory` constructor.
-For demo purposes, we will also slightly modify our
-`getMessageHistory()` method to always start new sessions with the
-previously declared list of 10 messages to simulate several conversation
-turns:
+
+이제 이 체인을 `RunnableWithMessageHistory` 생성자에 래핑해 봅시다. 데모 목적으로 `getMessageHistory()` 메서드를 약간 수정하여 항상
+이전 대화 목록의 최근 10개의 메시지로 새로운 세션을 시작하여 여러 대화 턴을 시뮬레이션해 보겠습니다:
 
 ```typescript
 const messageHistories: Record<string, InMemoryChatMessageHistory> = {};
@@ -531,9 +503,9 @@ response.content;
 "I'm afraid I don't actually know your name since you haven't provided it to me yet.  I don't have pe"... 66 more characters
 ```
 
-There’s now two new messages in the chat history. This means that even
-more information that used to be accessible in our conversation history
-is no longer available!
+이제 채팅 기록에 두 개의 새로운 메시지가 추가되었습니다. 이는 이전 대화
+기록에서 접근할 수 있었던 더 많은 정보가 더 이상 사용 불가능하게 되었음을
+의미합니다!
 
 ```typescript
 const response = await withMessageHistory.invoke(
@@ -550,25 +522,25 @@ response.content;
 "I'm sorry, I don't have any information about your favorite ice cream flavor since you haven't share"... 167 more characters
 ```
 
-If you take a look at LangSmith, you can see exactly what is happening
-under the hood in the [LangSmith
-trace](https://smith.langchain.com/public/ebc2e1e7-0703-43f7-a476-8cb8cbd7f61a/r).
-Navigate to the chat model call to see exactly which messages are
-getting filtered out.
 
-## Streaming
 
-Now we’ve got a functional chatbot. However, one _really_ important UX
-consideration for chatbot application is streaming. LLMs can sometimes
-take a while to respond, and so in order to improve the user experience
-one thing that most application do is stream back each token as it is
-generated. This allows the user to see progress.
+LangSmith를 살펴보면 [LangSmith
+trace](https://smith.langchain.com/public/ebc2e1e7-0703-43f7-a476-8cb8cbd7f61a/r)에서
+내부적으로 무슨 일이 일어나고 있는지 정확히 알 수 있습니다. 채팅 모델 호출로
+이동하여 정확히 어떤 메시지가 필터링되는지 확인하십시오.
 
-It’s actually super easy to do this!
+## 스트리밍
 
-All chains expose a `.stream()` method, and ones that use message
-history are no different. We can simply use that method to get back a
-streaming response.
+이제 채팅봇 기능은 갖추게 되었습니다. 그러나 채팅봇 애플리케이션에서 매우 중요한
+사용자 경험(UX) 고려 사항 중 하나는 스트리밍입니다. LLM은 때때로 응답하는 데
+시간이 걸릴 수 있으므로, 사용자 경험을 향상하기 위해 대부분의 애플리케이션에서는
+각 토큰이 생성될 때마다 스트리밍하여 반환합니다. 이렇게 하면 사용자가 진행 상황을
+볼 수 있습니다.
+
+이 작업은 실제로 매우 간단합니다!
+
+모든 체인은 `.stream()` 메서드를 노출하며, 메시지 히스토리를 사용하는 체인도
+예외는 아닙니다. 단순히 그 메서드를 사용하여 스트리밍 응답을 받을 수 있습니다.
 
 ```typescript
 const config = {
@@ -625,20 +597,18 @@ Why
 |
 ```
 
-## Next Steps
+## 다음 단계
 
-Now that you understand the basics of how to create a chatbot in
-LangChain, some more advanced tutorials you may be interested in are:
+이제 LangChain에서 채팅봇을 만드는 기본 사항을 이해했으므로, 관심을 가질만한
+고급 튜토리얼은 다음과 같습니다:
 
-- [Conversational RAG](../../docs/tutorials/qa_chat_history): Enable a
-  chatbot experience over an external source of data
-- [Agents](../../docs/tutorials/agents): Build a chatbot that can take
-  actions
+- [Conversational RAG](../../docs/tutorials/qa_chat_history): 외부 데이터 소스를
+  통해 채팅봇 경험 제공
+- [Agents](../../docs/tutorials/agents): 동작을 수행할 수 있는 채팅봇 구축
 
-If you want to dive deeper on specifics, some things worth checking out
-are:
+세부 사항을 더 깊이 파고들고 싶다면 다음 항목을  보세요:
 
-- [Streaming](../../docs/how_to/streaming): streaming is _crucial_ for
-  chat applications
-- [How to add message history](../../docs/how_to/message_history): for
-  a deeper dive into all things related to message history
+- [Streaming](../../docs/how_to/streaming): 스트리밍은 채팅 애플리케이션에
+  _매우_ 중요합니다
+- [How to add message history](../../docs/how_to/message_history): 메시지
+  히스토리와 관련된 모든 내용을 깊이 있게 탐구할 수 있습니다.
